@@ -1,20 +1,25 @@
-import { Link } from "react-router-dom";
+// src/pages/public/LoginPage.jsx
+/*
+  This snippet shows the change: navigate to /user/dashboard after "login".
+  Make sure the file imports useNavigate from react-router-dom:
+    import { Link, useNavigate } from "react-router-dom";
+  And call navigate("/user/dashboard") on successful login / button click.
+*/
+
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { motion } from "framer-motion";
 
-/*
-  LoginPage Component
-  - Pre-login page for users
-  - Contains form with email/password
-  - Link to Signup page
-  - Navbar and Footer visible
-*/
 const LoginPage = () => {
+  const navigate = useNavigate();
+
   const handleLogin = (e) => {
     e.preventDefault();
-    // TODO: Implement login API integration
-    alert("Login functionality will be implemented in backend integration.");
+    // TEMP: client-side redirect to user dashboard
+    // Replace with real authentication later
+    navigate("/user/dashboard");
   };
 
   return (
@@ -44,8 +49,8 @@ const LoginPage = () => {
               className="border border-green-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
             />
             <button
-              onClick={() => navigate("/user")}
-              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors duration-300"
+              type="submit"
+              className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-colors duration-300"
             >
               Login
             </button>
