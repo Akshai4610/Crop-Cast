@@ -1,25 +1,13 @@
-import { useState } from 'react'
-import './App.css'
+// - Chooses layout based on user authentication state.
+// - Avoids UI code inside App for clean architecture.
 
-function App() {
-  const [count, setCount] = useState(0)
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes";      // Import central route manager
 
+export default function App() {
   return (
-    <>
-      <h1>Vite + React</h1>
-      <div className="card text-amber-200">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs text-red-600 font-semibold text-3xl">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <BrowserRouter>
+      <AppRoutes />  {/* All routes handled separately */}
+    </BrowserRouter>
+  );
 }
-
-export default App
