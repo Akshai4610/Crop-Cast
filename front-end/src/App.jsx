@@ -1,22 +1,30 @@
-// src/App.jsx
+/*
+  App Component
+  -------------
+  - Holds only route definitions (kept minimal as required)
+  - Loads public pages and user page
+*/
 
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-// Public Pages
 import HomePage from "./pages/public/HomePage";
 import LoginPage from "./pages/public/LoginPage";
 import SignupPage from "./pages/public/SignupPage";
+import UserPage from "./pages/user/UserPage";  // NEW
 
-// App component
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+
+        {/* Public Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        {/* 404 fallback */}
+
+        {/* User Mode Route */}
+        <Route path="/user" element={<UserPage />} />
+
+        {/* Fallback */}
         <Route path="*" element={<HomePage />} />
       </Routes>
     </Router>

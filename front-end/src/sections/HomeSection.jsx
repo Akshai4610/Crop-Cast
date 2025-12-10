@@ -10,7 +10,7 @@ const HomeSection = () => {
   return (
     <section
       id="home"
-      className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-r from-green-100 to-green-200"
+      className="min-h-screen flex flex-col justify-center items-center bg-linear-to-r from-green-100 to-green-200"
     >
       <motion.h1
         initial={{ opacity: 0, y: -50 }}
