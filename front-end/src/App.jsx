@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Pages
-import HomePage from "./section/HomeSection";
+import HomePage from "./pages/public/HomePage";
+
 
 // App component
 function App() {
