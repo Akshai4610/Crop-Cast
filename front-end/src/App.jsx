@@ -1,13 +1,18 @@
-// - Chooses layout based on user authentication state.
-// - Avoids UI code inside App for clean architecture.
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./routes";      // Import central route manager
+// Pages
+import HomePage from "./section/HomeSection";
 
-export default function App() {
+// App component
+function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />  {/* All routes handled separately */}
-    </BrowserRouter>
+    <Router>
+      {/* Routing for public pages */}
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </Router>
   );
 }
+
+export default App;
