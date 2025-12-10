@@ -1,22 +1,34 @@
+// src/pages/public/HomePage.jsx
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { scroller } from "react-scroll";
+
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import HomeSection from "../../sections/HomeSection";
-import ServicesSection from "../../sections/ServiceSection";
+import ServiceSection from "../../sections/ServiceSection";
 import AboutSection from "../../sections/AboutSection";
 import ContactSection from "../../sections/ContactSection";
 
-/*
-  HomePage Component
-  - Combines Navbar, all public sections, and Footer
-  - Fully functional pre-login landing page
-*/
 const HomePage = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      scroller.scrollTo(location.state.scrollTo, {
+        duration: 800,
+        delay: 0,
+        smooth: "easeInOutQuart",
+      });
+    }
+  }, [location.state]);
+
   return (
     <div className="relative">
       <Navbar />
       <main className="mt-16">
         <HomeSection />
-        <ServicesSection />
+        <ServiceSection />
         <AboutSection />
         <ContactSection />
       </main>

@@ -1,17 +1,12 @@
-import { Link, useLocation } from "react-router-dom";
-import { animateScroll as scroll, scroller } from "react-scroll";
+// src/components/Navbar.jsx
+import React from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { scroller } from "react-scroll";
 
-/*
-  Navbar Component
-  - Fixed at top
-  - Links: Home, Services, About, Contact, Login, Signup
-  - Smooth scrolls to sections when on HomePage
-  - Highlights current section
-*/
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Function to scroll to a section by id
   const scrollToSection = (id) => {
     if (location.pathname === "/") {
       scroller.scrollTo(id, {
@@ -20,8 +15,8 @@ const Navbar = () => {
         smooth: "easeInOutQuart",
       });
     } else {
-      // If not on home page, go to home page first
-      window.location.href = `/#${id}`;
+      // Navigate to home first, then scroll
+      navigate("/", { state: { scrollTo: id } });
     }
   };
 
