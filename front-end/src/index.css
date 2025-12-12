@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+.nav-link {
+  position: relative;
+  transition: 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #104710;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: lime;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}

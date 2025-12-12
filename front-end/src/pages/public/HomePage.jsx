@@ -14,6 +14,10 @@ const HomePage = () => {
   const location = useLocation();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (location.state?.scrollTo) {
       scroller.scrollTo(location.state.scrollTo, {
         duration: 800,
@@ -24,12 +28,12 @@ const HomePage = () => {
   }, [location.state]);
 
   return (
-    <div className ="pt-24">
+    <div className="pt-24">
       <Navbar />
       <main className="mt-16">
         <HomeSection />
-        <ServiceSection />
         <AboutSection />
+        <ServiceSection />
         <ContactSection />
       </main>
       <Footer />

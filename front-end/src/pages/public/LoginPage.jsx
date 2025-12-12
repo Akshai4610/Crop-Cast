@@ -49,8 +49,13 @@ const LoginPage = () => {
               className="border border-green-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
             />
             <button
-              type="submit"
-              className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-colors duration-300"
+              className="
+                w-full py-3 mt-4 font-bold rounded-xl
+                bg-gradient-to-r from-green-400 to-emerald-500
+                text-black shadow-lg
+                hover:scale-105 hover:shadow-2xl
+                active:scale-95 transition-all duration-300
+              "
             >
               Login
             </button>
