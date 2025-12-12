@@ -1,49 +1,38 @@
+// src/pages/user/ProfilePage.jsx
 /*
-  ProfilePage
-  -----------
-  - User profile page (full page)
-  - Reachable at /user/profile
-  - Replace placeholders with real data later.
+  User Profile Page
+  - Shows user info with editable form
 */
-
-import { motion } from "framer-motion";
 
 const ProfilePage = () => {
   return (
-    <section className="min-h-screen bg-white py-16 px-6" id="user-profile">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-4xl mx-auto bg-gray-50 rounded-2xl p-8 shadow"
-      >
-        <h1 className="text-3xl font-bold text-green-800 mb-4">Profile</h1>
-        <p className="text-green-700 mb-6">Manage your account details and preferences.</p>
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Profile</h1>
 
-        {/* Profile details (static placeholders) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Full Name</label>
-            <div className="mt-1 text-gray-800">John Doe</div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <div className="mt-1 text-gray-800">john@example.com</div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Account Type</label>
-            <div className="mt-1 text-gray-800">Standard User</div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Member Since</label>
-            <div className="mt-1 text-gray-800">Jan 2025</div>
-          </div>
+      <form className="max-w-lg bg-gray-900/70 p-6 rounded-2xl shadow-lg space-y-4 animate-fade-in">
+        <div>
+          <label className="block mb-1 font-semibold">Full Name</label>
+          <input
+            type="text"
+            placeholder="John Doe"
+            className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-emerald-400 outline-none"
+          />
         </div>
-      </motion.div>
-    </section>
+
+        <div>
+          <label className="block mb-1 font-semibold">Email</label>
+          <input
+            type="email"
+            placeholder="john@example.com"
+            className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-emerald-400 outline-none"
+          />
+        </div>
+
+        <button className="py-3 w-full rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-black font-semibold hover:scale-105 transition">
+          Update Profile
+        </button>
+      </form>
+    </div>
   );
 };
 

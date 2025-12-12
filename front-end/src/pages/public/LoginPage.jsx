@@ -9,21 +9,48 @@
 */
 
 import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 
 const LoginPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.state?.fromSignup) {
+      // Optional: show toast/message
+      alert("Signup successful! Please login.");
+    }
+  }, [location]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    // TODO: Add API call to login
+    console.log("Login success");
+
+    // Redirect to user dashboard after login
+    navigate("/user/dashboard");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-900 to-green-900 flex flex-col">
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center px-6 py-24">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-10 max-w-md w-full shadow-2xl animate-fade-in">
-          <h2 className="text-3xl font-bold text-white mb-6 text-center">Login to CropCast</h2>
+          <h2 className="text-3xl font-bold text-white mb-6 text-center">
+            Login to CropCast
+          </h2>
 
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleLogin}>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">📧</span>
+              <span className="absolute left-3 top-3 text-white text-lg">
+                📧
+              </span>
               <input
                 type="email"
                 placeholder="Email"
@@ -32,7 +59,9 @@ const LoginPage = () => {
             </div>
 
             <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">🔒</span>
+              <span className="absolute left-3 top-3 text-white text-lg">
+                🔒
+              </span>
               <input
                 type="password"
                 placeholder="Password"
@@ -50,7 +79,10 @@ const LoginPage = () => {
 
           <p className="text-white/70 text-center mt-4">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-emerald-400 font-semibold hover:underline">
+            <Link
+              to="/signup"
+              className="text-emerald-400 font-semibold hover:underline"
+            >
               Sign up
             </Link>
           </p>
