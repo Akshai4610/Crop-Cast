@@ -1,47 +1,68 @@
 // src/pages/public/SignupPage.jsx
 /*
   Signup Page
-  - Includes Navbar + Footer
-  - After signup (temporary) redirects to /user/dashboard
-  - Well-styled form and CTA
+  - Glassmorphism card design
+  - Gradient buttons
+  - Navbar & Footer visible
+  - Smooth fade-in
+  - Link to Login page
 */
 
-import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 
 const SignupPage = () => {
-  const navigate = useNavigate();
-
-  const handleSignup = (e) => {
-    e.preventDefault();
-    // TODO: call backend signup endpoint, handle validation
-    navigate("/user/dashboard");
-  };
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-900 to-green-900 flex flex-col">
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center bg-gradient-to-b from-gray-50 to-white pt-16">
-        <div className="max-w-md w-full p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Create your account</h2>
-          <p className="text-sm text-gray-500 mb-6">Sign up to get personalized recommendations</p>
+      <main className="flex-grow flex items-center justify-center px-6 py-24">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-10 max-w-md w-full shadow-2xl animate-fade-in">
+          <h2 className="text-3xl font-bold text-white mb-6 text-center">Create an Account</h2>
 
-          <form className="space-y-4" onSubmit={handleSignup}>
-            <input required name="name" placeholder="Full name" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
-            <input required name="email" type="email" placeholder="Email" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
-            <input required name="password" type="password" placeholder="Password" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
+          <form className="space-y-5">
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-white text-lg">👤</span>
+              <input
+                type="text"
+                placeholder="Full Name"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+              />
+            </div>
 
-            <button type="submit" className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-400 to-green-500 text-white font-semibold hover:brightness-105 transition cursor-pointer">
-              Create account
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-white text-lg">📧</span>
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+              />
+            </div>
+
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-white text-lg">🔒</span>
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-black font-semibold shadow-lg hover:scale-105 transition"
+            >
+              Sign Up
             </button>
           </form>
 
-          <div className="mt-4 text-sm text-gray-600 text-center">
-            Already have an account? <Link to="/login" className="text-green-600 font-semibold">Login</Link>
-          </div>
+          <p className="text-white/70 text-center mt-4">
+            Already have an account?{" "}
+            <Link to="/login" className="text-emerald-400 font-semibold hover:underline">
+              Login
+            </Link>
+          </p>
         </div>
       </main>
 
