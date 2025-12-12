@@ -1,21 +1,23 @@
-// src/pages/user/ProfilePage.jsx
+// ProfilePage.jsx
 /*
   PURPOSE:
-  - Displays and updates user profile
-  - Will later include edit form + prediction history
+  - Combines ProfileDetails and PredictionHistory
+  - Clean page-level composition
 */
+
+import ProfileDetails from "../../components/user/profile/ProfileDetails";
+import PredictionHistory from "../../components/user/profile/PredictionHistory";
 
 const ProfilePage = () => {
   return (
-    <section className="max-w-4xl mx-auto animate-fade-in">
-      <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-lime-400 bg-clip-text text-transparent">
-        Profile
+    <section className="max-w-6xl mx-auto animate-fade-in">
+      <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-emerald-400 to-lime-400 bg-clip-text text-transparent">
+        User Profile
       </h1>
 
-      <div className="glass-card">
-        <p className="text-white/80">
-          User details and update form will be implemented here.
-        </p>
+      <div className="grid md:grid-cols-2 gap-8">
+        <ProfileDetails />
+        <PredictionHistory />
       </div>
     </section>
   );
