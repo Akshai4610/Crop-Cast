@@ -1,10 +1,18 @@
 // src/pages/public/HomePage.jsx
-import React, { useEffect } from "react";
+/*
+  Public Home Page
+  - Composes all sections
+  - Handles scroll-to-section logic from Navbar (location.state.scrollTo)
+  - Navbar and Footer always visible
+*/
+
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { scroller } from "react-scroll";
 
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+
 import HomeSection from "../../sections/HomeSection";
 import ServiceSection from "../../sections/ServiceSection";
 import AboutSection from "../../sections/AboutSection";
@@ -13,29 +21,27 @@ import ContactSection from "../../sections/ContactSection";
 const HomePage = () => {
   const location = useLocation();
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
+  // Scroll to section when navigated from login/signup
   useEffect(() => {
     if (location.state?.scrollTo) {
       scroller.scrollTo(location.state.scrollTo, {
-        duration: 800,
-        delay: 0,
+        duration: 700,
         smooth: "easeInOutQuart",
+        offset: -80,
       });
     }
-  }, [location.state]);
+  }, [location]);
 
   return (
-    <div className="pt-24">
+    <div className="min-h-screen bg-gray-950 text-white">
       <Navbar />
-      <main className="mt-16">
-        <HomeSection />
-        <AboutSection />
-        <ServiceSection />
-        <ContactSection />
-      </main>
+
+      {/* Sections */}
+      <HomeSection />
+      <AboutSection />
+      <ServiceSection />
+      <ContactSection />
+
       <Footer />
     </div>
   );

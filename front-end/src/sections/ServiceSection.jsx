@@ -1,42 +1,56 @@
-import { motion } from "framer-motion";
-
+// src/sections/ServiceSection.jsx
 /*
-  ServicesSection Component
-  - Displays main services/features of CropCast
-  - Each feature shown as a card with hover animation
+  Services Section
+  - Card-based layout
+  - Icons + hover animations
 */
-const ServicesSection = () => {
-  const services = [
-    { title: "Weather Forecast", description: "Get accurate weather predictions for your crops." },
-    { title: "Crop Recommendation", description: "Find the best crops based on weather & soil data." },
-    { title: "Expert Tips", description: "Receive guidance from agricultural experts." },
-  ];
 
+import { Element } from "react-scroll";
+
+const services = [
+  {
+    title: "Weather Forecast",
+    desc: "Accurate short-term and long-term weather predictions.",
+    icon: "☁️",
+  },
+  {
+    title: "Crop Recommendation",
+    desc: "AI-driven crop suggestions based on climate & soil.",
+    icon: "🌱",
+  },
+  {
+    title: "Expert Insights",
+    desc: "Actionable advice for maximizing yield and profit.",
+    icon: "📊",
+  },
+];
+
+const ServiceSection = () => {
   return (
-    <section
-      id="services"
-      className="min-h-screen bg-green-50 py-16 px-6"
-    >
-      <h2 className="text-4xl font-bold text-center text-green-800 mb-12">
-        Our Services
-      </h2>
-      <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-        {services.map((service, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: index * 0.2 }}
-            className="bg-white rounded-lg shadow-lg p-6 hover:scale-105 transition-transform duration-300"
-          >
-            <h3 className="text-2xl font-semibold text-green-700 mb-4">{service.title}</h3>
-            <p className="text-green-600">{service.description}</p>
-          </motion.div>
-        ))}
-      </div>
-    </section>
+    <Element name="services">
+      <section className="py-24 bg-gray-900 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">Our Services</h2>
+          <p className="text-white/70 mb-12">
+            Powerful tools designed for modern agriculture
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {services.map((s, i) => (
+              <div
+                key={i}
+                className="bg-gray-800 rounded-2xl p-8 shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-2 transition"
+              >
+                <div className="text-5xl mb-4">{s.icon}</div>
+                <h3 className="text-xl font-semibold mb-2">{s.title}</h3>
+                <p className="text-white/70">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </Element>
   );
 };
 
-export default ServicesSection;
+export default ServiceSection;

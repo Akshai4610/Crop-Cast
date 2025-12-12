@@ -1,41 +1,34 @@
-import { motion } from "framer-motion";
-
+// src/sections/HomeSection.jsx
 /*
-  HomeSection Component
-  - Hero section for landing page
-  - Animated welcome text
-  - Background and CTA buttons
+  Hero / Landing Section
+  - Dark gradient background
+  - Strong headline
+  - CTA button
 */
+
+import { Element } from "react-scroll";
+
 const HomeSection = () => {
   return (
-    <section
-      id="home"
-      className="min-h-screen flex flex-col justify-center items-center bg-linear-to-r from-green-100 to-green-200"
-    >
-      <motion.h1
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-        className="text-5xl font-bold text-green-800 mb-6 text-center"
-      >
-        Welcome to CropCast
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 1 }}
-        className="text-xl text-green-700 mb-6 text-center"
-      >
-        Smart Weather-Based Crop Recommendation System
-      </motion.p>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="bg-green-600 text-white px-6 py-3 rounded shadow hover:bg-green-700 transition-all duration-300 cursor-pointer"
-      >
-        Explore
-      </motion.button>
-    </section>
+    <Element name="home">
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-emerald-900 to-green-900 pt-20 px-6">
+        <div className="max-w-4xl text-center animate-fade-in">
+          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-6">
+            Smart Crop Decisions<br />
+            <span className="text-emerald-400">Powered by Weather & AI</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-white/80 mb-10">
+            CropCast helps farmers choose the best crops using real-time weather
+            insights and machine learning predictions.
+          </p>
+
+          <button className="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-lg font-semibold text-black shadow-lg hover:scale-105 transition">
+            Explore Features
+          </button>
+        </div>
+      </section>
+    </Element>
   );
 };
 

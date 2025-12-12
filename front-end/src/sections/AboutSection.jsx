@@ -1,31 +1,33 @@
-import { motion } from "framer-motion";
-
+// src/sections/AboutSection.jsx
 /*
-  AboutSection Component
-  - Describes the project and objectives
-  - Animated fade-in on scroll
+  About Section
+  - Two-column layout
+  - Professional explanation
 */
+
+import { Element } from "react-scroll";
+
 const AboutSection = () => {
   return (
-    <section
-      id="about"
-      className="min-h-screen bg-white py-16 px-6"
-    >
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1 }}
-        className="max-w-4xl mx-auto text-center"
-      >
-        <h2 className="text-4xl font-bold text-green-800 mb-6">About CropCast</h2>
-        <p className="text-green-700 text-lg">
-          CropCast is a weather-based crop recommendation system designed to help farmers
-          select the most suitable crops for cultivation. Using real-time weather data and
-          predictive analytics, CropCast provides actionable insights for better yield.
-        </p>
-      </motion.div>
-    </section>
+    <Element name="about">
+      <section className="py-24 bg-gray-950 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-3xl font-bold mb-4">About CropCast</h2>
+            <p className="text-white/70 leading-relaxed">
+              CropCast is a weather-based crop recommendation platform that helps
+              farmers make informed decisions. By combining real-time climate
+              data with machine learning models, CropCast improves productivity
+              and reduces risk.
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-500 to-green-700 rounded-3xl h-64 shadow-xl flex items-center justify-center text-6xl">
+            🌾
+          </div>
+        </div>
+      </section>
+    </Element>
   );
 };
 

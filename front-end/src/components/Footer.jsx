@@ -1,40 +1,135 @@
-export default function Footer() {
-  return (
-    <footer className="w-full bg-black text-white py-12 mt-20 border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-10">
+// src/components/Footer.jsx
+/*
+  Footer
+  - Working quick links (scroll)
+  - Real contact actions
+  - Visible on all pages
+*/
 
-        {/* Left */}
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { scroller } from "react-scroll";
+
+const Footer = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Scroll handler (works from any page)
+  const goToSection = (section) => {
+    if (location.pathname !== "/") {
+      navigate("/", { state: { scrollTo: section } });
+    } else {
+      scroller.scrollTo(section, {
+        smooth: true,
+        duration: 600,
+        offset: -80,
+      });
+    }
+  };
+
+  return (
+    <footer className="bg-gray-950 border-t border-white/10 text-white">
+      <div className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-4 gap-10">
+
+        {/* BRAND */}
         <div>
-          <h2 className="text-2xl font-bold mb-4 text-lime-300">CropCast</h2>
-          <p className="text-gray-300">
-            Smart weather-based crop guidance for every farmer.
-            Accurate predictions, trusted insights.
+          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent">
+            CropCast
+          </h2>
+          <p className="text-white/70 mt-4 text-sm leading-relaxed">
+            Smart crop recommendation platform using weather intelligence and AI
+            for better agricultural decisions.
           </p>
         </div>
 
-        {/* Middle */}
+        {/* QUICK LINKS */}
         <div>
-          <h3 className="text-xl mb-4 font-semibold">Quick Links</h3>
-          <ul className="space-y-2 text-gray-300">
-            <li><a href="#home" className="hover:text-lime-300">Home</a></li>
-            <li><a href="#about" className="hover:text-lime-300">About</a></li>
-            <li><a href="#services" className="hover:text-lime-300">Services</a></li>
-            <li><a href="#contact" className="hover:text-lime-300">Contact</a></li>
+          <h3 className="font-semibold mb-4">Quick Links</h3>
+          <ul className="space-y-3 text-white/70">
+            <li>
+              <button onClick={() => goToSection("home")} className="hover:text-emerald-400 transition">
+                Home
+              </button>
+            </li>
+            <li>
+              <button onClick={() => goToSection("about")} className="hover:text-emerald-400 transition">
+                About
+              </button>
+            </li>
+            <li>
+              <button onClick={() => goToSection("services")} className="hover:text-emerald-400 transition">
+                Services
+              </button>
+            </li>
+            <li>
+              <button onClick={() => goToSection("contact")} className="hover:text-emerald-400 transition">
+                Contact
+              </button>
+            </li>
           </ul>
         </div>
 
-        {/* Right */}
+        {/* CONTACT */}
         <div>
-          <h3 className="text-xl mb-4 font-semibold">Contact</h3>
-          <p className="text-gray-300">📍 Kerala, India</p>
-          <p className="text-gray-300">✉ cropcast@gmail.com</p>
-          <p className="text-gray-300">📞 +91 98765 43210</p>
+          <h3 className="font-semibold mb-4">Contact</h3>
+          <ul className="space-y-3 text-white/70">
+            <li>
+              📍{" "}
+              <a
+                href="https://www.google.com/maps/search/India"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-400 transition"
+              >
+                Kerala, India
+              </a>
+            </li>
+            <li>
+              📧{" "}
+              <a
+                href="mailto:support@cropcast.ai"
+                className="hover:text-emerald-400 transition"
+              >
+                support@cropcast.ai
+              </a>
+            </li>
+            <li>
+              📞{" "}
+              <a
+                href="tel:+919876543210"
+                className="hover:text-emerald-400 transition"
+              >
+                +91 98765 43210
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {/* AUTH */}
+        <div>
+          <h3 className="font-semibold mb-4">Account</h3>
+          <div className="flex flex-col gap-4">
+            <Link
+              to="/login"
+              className="text-center px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-black font-semibold hover:scale-105 transition"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="text-center px-5 py-3 rounded-xl border border-emerald-400 text-emerald-400 hover:bg-emerald-400 hover:text-black transition rounded-xl"
+            >
+              Sign Up
+            </Link>
+          </div>
         </div>
       </div>
 
-      <p className="text-center text-gray-400 mt-8">
-        © {new Date().getFullYear()} CropCast. All Rights Reserved.
-      </p>
+      {/* COPYRIGHT */}
+      <div className="text-center py-6 border-t border-white/10 text-white/50 text-sm">
+        © {new Date().getFullYear()} CropCast. All rights reserved.
+      </div>
     </footer>
   );
-}
+};
+
+export default Footer;
