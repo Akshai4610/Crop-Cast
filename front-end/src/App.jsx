@@ -13,8 +13,8 @@ import LoginPage from "./pages/public/LoginPage";
 import SignupPage from "./pages/public/SignupPage";
 
 /* User layout + pages */
-import UserLayout from "./pages/user/UserLayout";
-import DashboardPage from "./pages/user/DashboardPage";
+import UserLayout from "./layouts/UserLayout";
+import DashboardPage from "./pages/user/DashBoardPage";
 import ProfilePage from "./pages/user/ProfilePage";
 import NewsPage from "./pages/user/NewsPage";
 

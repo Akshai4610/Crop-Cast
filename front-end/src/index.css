@@ -44,3 +44,8 @@ html {
 .animate-fade-in {
   animation: fadeInUp 1s ease forwards;
 }
+
+/* Glassmorphism reusable card */
+.glass-card {
+  @apply bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20;
+}

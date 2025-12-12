@@ -10,9 +10,9 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { scroller } from "react-scroll";
 
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
-import ScrollToTop from "../../components/ScrollToTop";
+import Navbar from "../../components/common/Navbar";
+import Footer from "../../components/common/Footer";
+import ScrollToTop from "../../components/common/ScrollToTop";
 
 
 import HomeSection from "../../sections/HomeSection";
