@@ -24,7 +24,7 @@ const HomePage = () => {
   }, [location.state]);
 
   return (
-    <div className="relative">
+    <div className ="pt-24">
       <Navbar />
       <main className="mt-16">
         <HomeSection />
