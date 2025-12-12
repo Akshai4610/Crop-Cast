@@ -1,77 +1,51 @@
 // src/pages/public/LoginPage.jsx
 /*
-  This snippet shows the change: navigate to /user/dashboard after "login".
-  Make sure the file imports useNavigate from react-router-dom:
-    import { Link, useNavigate } from "react-router-dom";
-  And call navigate("/user/dashboard") on successful login / button click.
+  Login Page
+  - Includes Navbar (improved) and Footer so header/footer are visible
+  - On successful temporary login, navigates to /user/dashboard
+  - Avoids '#'; uses navigate
+  - Styled CTA buttons and centered card
 */
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { motion } from "framer-motion";
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    // TEMP: client-side redirect to user dashboard
-    // Replace with real authentication later
+    // TODO: call backend auth, store token, then navigate
     navigate("/user/dashboard");
   };
 
   return (
-    <div className="relative">
-      <Navbar />
-      <main className="min-h-screen flex items-center justify-center bg-green-50 mt-16 px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="bg-white p-10 rounded shadow-lg w-full max-w-md"
-        >
-          <h2 className="text-3xl font-bold text-green-800 mb-6 text-center">
-            Login
-          </h2>
-          <form className="flex flex-col gap-4" onSubmit={handleLogin}>
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              className="border border-green-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              className="border border-green-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-            <button
-              className="
-                w-full py-3 mt-4 font-bold rounded-xl
-                bg-gradient-to-r from-green-400 to-emerald-500
-                text-black shadow-lg
-                hover:scale-105 hover:shadow-2xl
-                active:scale-95 transition-all duration-300
-              "
-            >
-              Login
+    <div className="min-h-screen flex flex-col">
+      <Navbar /> {/* Navbar always visible */}
+
+      <main className="flex-1 flex items-center justify-center bg-gradient-to-b from-gray-50 to-white pt-16">
+        <div className="max-w-md w-full p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome back</h2>
+          <p className="text-sm text-gray-500 mb-6">Log in to access your dashboard</p>
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <input required name="email" type="email" placeholder="Email" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
+            <input required name="password" type="password" placeholder="Password" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
+
+            <button type="submit" className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-400 to-green-500 text-white font-semibold hover:brightness-105 transition cursor-pointer">
+              Log in
             </button>
           </form>
-          <p className="mt-4 text-green-700 text-center">
-            Don't have an account?{" "}
-            <Link
-              to="/signup"
-              className="text-green-800 font-semibold hover:underline"
-            >
-              Signup
-            </Link>
-          </p>
-        </motion.div>
+
+          <div className="mt-4 text-sm text-gray-600 text-center">
+            Don't have an account? <Link to="/signup" className="text-green-600 font-semibold">Create one</Link>
+          </div>
+        </div>
       </main>
-      <Footer />
+
+      <Footer /> {/* Footer restored */}
     </div>
   );
 };

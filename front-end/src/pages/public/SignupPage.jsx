@@ -1,80 +1,50 @@
 // src/pages/public/SignupPage.jsx
+/*
+  Signup Page
+  - Includes Navbar + Footer
+  - After signup (temporary) redirects to /user/dashboard
+  - Well-styled form and CTA
+*/
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { motion } from "framer-motion";
 
-/*
-  SignupPage Component
-  - Pre-login page for new users
-  - Contains form for name, email, password
-  - Link to Login page
-  - Navbar and Footer visible
-*/
 const SignupPage = () => {
+  const navigate = useNavigate();
+
   const handleSignup = (e) => {
     e.preventDefault();
-    // TODO: Implement signup API integration
-    alert("Signup functionality will be implemented in backend integration.");
+    // TODO: call backend signup endpoint, handle validation
+    navigate("/user/dashboard");
   };
 
   return (
-    <div className="relative">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="min-h-screen flex items-center justify-center bg-green-50 mt-16 px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="bg-white p-10 rounded shadow-lg w-full max-w-md"
-        >
-          <h2 className="text-3xl font-bold text-green-800 mb-6 text-center">
-            Signup
-          </h2>
-          <form className="flex flex-col gap-4" onSubmit={handleSignup}>
-            <input
-              type="text"
-              placeholder="Full Name"
-              required
-              className="border border-green-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              className="border border-green-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              required
-              className="border border-green-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-            <button
-              className="
-                  w-full py-3 mt-4 font-bold rounded-xl
-                  bg-gradient-to-r from-green-400 to-emerald-500
-                  text-black shadow-lg
-                  hover:scale-105 hover:shadow-2xl
-                  active:scale-95 transition-all duration-300
-                "
-            >
-              Signup
+
+      <main className="flex-1 flex items-center justify-center bg-gradient-to-b from-gray-50 to-white pt-16">
+        <div className="max-w-md w-full p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Create your account</h2>
+          <p className="text-sm text-gray-500 mb-6">Sign up to get personalized recommendations</p>
+
+          <form className="space-y-4" onSubmit={handleSignup}>
+            <input required name="name" placeholder="Full name" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
+            <input required name="email" type="email" placeholder="Email" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
+            <input required name="password" type="password" placeholder="Password" className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-emerald-200" />
+
+            <button type="submit" className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-400 to-green-500 text-white font-semibold hover:brightness-105 transition cursor-pointer">
+              Create account
             </button>
           </form>
-          <p className="mt-4 text-green-700 text-center">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-green-800 font-semibold hover:underline"
-            >
-              Login
-            </Link>
-          </p>
-        </motion.div>
+
+          <div className="mt-4 text-sm text-gray-600 text-center">
+            Already have an account? <Link to="/login" className="text-green-600 font-semibold">Login</Link>
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   );

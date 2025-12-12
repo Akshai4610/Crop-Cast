@@ -31,7 +31,7 @@ const HomeSection = () => {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="bg-green-600 text-white px-6 py-3 rounded shadow hover:bg-green-700 transition-all duration-300"
+        className="bg-green-600 text-white px-6 py-3 rounded shadow hover:bg-green-700 transition-all duration-300 cursor-pointer"
       >
         Explore
       </motion.button>
