@@ -40,13 +40,6 @@ function App() {
         {/* Fallback to home for all unmatched routes */}
         <Route path="*" element={<HomePage />} />
       </Routes>
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className="fixed bottom-6 right-6 p-4 bg-lime-400 text-black font-bold rounded-full shadow-xl
-             hover:scale-110 transition-all z-50"
-      >
-        ↑
-      </button>
     </Router>
   );
 }

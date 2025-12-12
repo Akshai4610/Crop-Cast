@@ -12,6 +12,8 @@ import { scroller } from "react-scroll";
 
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import ScrollToTop from "../../components/ScrollToTop";
+
 
 import HomeSection from "../../sections/HomeSection";
 import ServiceSection from "../../sections/ServiceSection";
@@ -43,6 +45,7 @@ const HomePage = () => {
       <ContactSection />
 
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
