@@ -14,6 +14,7 @@ from app.database import get_database
 
 from app.routes.user_routes import router as user_router
 from app.routes.history_routes import router as history_router
+from app.routes.predict_routes import router as predict_router
 
 
 # Create FastAPI app instance
@@ -36,6 +37,7 @@ app.add_middleware(
 # REGISTER ROUTERS HERE 
 app.include_router(user_router)
 app.include_router(history_router)
+app.include_router(predict_router)
 
 
 # Health check route (TEST)
