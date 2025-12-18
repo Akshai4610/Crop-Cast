@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import get_database
+from app.routes.user_routes import router as user_router
 
 
 # Create FastAPI app instance
@@ -30,6 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# REGISTER ROUTERS HERE 
+app.include_router(user_router)
+
 # Health check route (TEST)
 @app.get("/db-test")
 async def database_test():
@@ -42,3 +46,11 @@ async def database_test():
         "status": "MongoDB connected",
         "collections": collections
     }
+
+# Root test endpoint
+@app.get("/")
+async def root():
+    """
+    Root endpoint to verify backend is running
+    """
+    return {"message": "CropCast backend running"}
