@@ -1,6 +1,10 @@
 motor
+numpy
+pandas
+joblib
 pymongo
 pydantic
+scikit-learn
 python-dotenv
 fastapi[standard]
 uvicorn[standard]
