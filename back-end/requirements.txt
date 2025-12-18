@@ -1,3 +1,5 @@
+motor
+pymongo
 pydantic
 python-dotenv
 fastapi[standard]

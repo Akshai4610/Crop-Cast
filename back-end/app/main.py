@@ -10,6 +10,9 @@ PURPOSE:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.database import get_database
+
+
 # Create FastAPI app instance
 app = FastAPI(
     title="Crop Cast API",
@@ -28,6 +31,14 @@ app.add_middleware(
 )
 
 # Health check route (TEST)
-@app.get("/")
-def root():
-    return {"message": "Crop Cast backend is running"}
+@app.get("/db-test")
+async def database_test():
+    """
+    Test MongoDB connection
+    """
+    db = get_database()
+    collections = await db.list_collection_names()
+    return {
+        "status": "MongoDB connected",
+        "collections": collections
+    }
