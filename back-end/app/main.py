@@ -11,7 +11,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import get_database
+
 from app.routes.user_routes import router as user_router
+from app.routes.history_routes import router as history_router
 
 
 # Create FastAPI app instance
@@ -33,6 +35,8 @@ app.add_middleware(
 
 # REGISTER ROUTERS HERE 
 app.include_router(user_router)
+app.include_router(history_router)
+
 
 # Health check route (TEST)
 @app.get("/db-test")
