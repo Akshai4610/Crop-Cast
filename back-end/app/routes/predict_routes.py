@@ -1,72 +1,34 @@
-"""
-predict_routes.py
-
-PURPOSE:
-- Load trained ML model
-- Accept weather inputs
-- Predict crop
-- Save prediction history
-"""
-
-import joblib
-import os
 from fastapi import APIRouter, HTTPException
-from app.database import get_database
-from app.models.history_model import history_document
+from app.schemas.predict_schema import PredictRequest, PredictResponse
+from app.services.weather_service import get_weather_by_city
+from app.services.ml_service import predict_crop
 
-router = APIRouter(prefix="/predict", tags=["Prediction"])
+router = APIRouter(
+    prefix="/predict",
+    tags=["Prediction"]
+)
 
-# -----------------------------
-# LOAD MODEL & ENCODER ONCE
-# -----------------------------
 
-MODEL_PATH = os.path.join("ml", "models", "crop_model.pkl")
-ENCODER_PATH = os.path.join("ml", "models", "label_encoder.pkl")
-
-model = joblib.load(MODEL_PATH)
-label_encoder = joblib.load(ENCODER_PATH)
-
-# -----------------------------
-# PREDICTION ENDPOINT
-# -----------------------------
-@router.post("/")
-async def predict_crop(data: dict):
+@router.post("/", response_model=PredictResponse)
+async def predict_crop_api(request: PredictRequest):
     """
-    Accept weather input and predict best crop
+    Predict crop using real-time weather (no API key)
     """
-
     try:
-        temperature = data["temperature"]
-        humidity = data["humidity"]
-        rainfall = data["rainfall"]
-        user_id = data["user_id"]
-        location = data["location"]
-    except KeyError:
-        raise HTTPException(status_code=400, detail="Invalid input data")
+        weather = get_weather_by_city(request.city)
 
-    # -----------------------------
-    # ML PREDICTION
-    # -----------------------------
-    features = [[temperature, humidity, rainfall]]
-    prediction = model.predict(features)
-    crop = label_encoder.inverse_transform(prediction)[0]
+        crop = predict_crop(
+            temperature=weather["temperature"],
+            humidity=weather["humidity"],
+            rainfall=weather["rainfall"]
+        )
 
-    # -----------------------------
-    # SAVE HISTORY
-    # -----------------------------
-    db = get_database()
+        return {
+            "temperature": weather["temperature"],
+            "humidity": weather["humidity"],
+            "rainfall": weather["rainfall"],
+            "recommended_crop": crop
+        }
 
-    history_data = history_document({
-        "user_id": user_id,
-        "location": location,
-        "temperature": temperature,
-        "humidity": humidity,
-        "rainfall": rainfall,
-        "recommended_crop": crop
-    })
-
-    await db.history.insert_one(history_data)
-
-    return {
-        "recommended_crop": crop
-    }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

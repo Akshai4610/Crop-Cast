@@ -3,6 +3,7 @@ numpy
 pandas
 joblib
 pymongo
+requests
 pydantic
 scikit-learn
 python-dotenv
