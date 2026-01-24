@@ -15,7 +15,7 @@ from datetime import datetime
 router = APIRouter(prefix="/users", tags=["Users"])
 
 # CREATE USER
-@router.post("/")
+@router.post("/{}")
 async def create_user(user: UserCreate):
     """
     Create a new user
