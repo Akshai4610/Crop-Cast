@@ -1,4 +1,3 @@
-// WeatherForm.jsx
 /*
   PURPOSE:
   - Collect weather-related inputs from user
@@ -8,23 +7,42 @@
 
 import { useState } from "react";
 
-const WeatherForm = ({ onPredict }) => {
-  // Local form state
+const WeatherForm = ({ onPredict, loading }) => {
+
+  // Form state
   const [formData, setFormData] = useState({
+    N: "",
+    P: "",
+    K: "",
     temperature: "",
     humidity: "",
+    ph: "",
     rainfall: "",
   });
 
   // Handle input changes
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   // Submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
-    onPredict(formData); // pass data to parent
+
+    const payload = {
+      N: Number(formData.N),
+      P: Number(formData.P),
+      K: Number(formData.K),
+      temperature: Number(formData.temperature),
+      humidity: Number(formData.humidity),
+      ph: Number(formData.ph),
+      rainfall: Number(formData.rainfall),
+    };
+
+    onPredict(payload); // 🔥 send data UP
   };
 
   return (
@@ -33,41 +51,30 @@ const WeatherForm = ({ onPredict }) => {
       className="glass-card space-y-4 animate-fade-in"
     >
       <h3 className="text-xl font-semibold text-emerald-300">
-        Weather Parameters
+        Soil & Weather Parameters
       </h3>
 
-      <input
-        name="temperature"
-        type="number"
-        placeholder="Temperature (°C)"
-        value={formData.temperature}
-        onChange={handleChange}
-        className="w-full p-3 rounded-xl bg-white/20 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-emerald-400"
-      />
-
-      <input
-        name="humidity"
-        type="number"
-        placeholder="Humidity (%)"
-        value={formData.humidity}
-        onChange={handleChange}
-        className="w-full p-3 rounded-xl bg-white/20 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-emerald-400"
-      />
-
-      <input
-        name="rainfall"
-        type="number"
-        placeholder="Rainfall (mm)"
-        value={formData.rainfall}
-        onChange={handleChange}
-        className="w-full p-3 rounded-xl bg-white/20 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-emerald-400"
-      />
+      {["N", "P", "K", "temperature", "humidity", "ph", "rainfall"].map(
+        (field) => (
+          <input
+            key={field}
+            name={field}
+            type="number"
+            placeholder={field.toUpperCase()}
+            value={formData[field]}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-xl bg-white/20 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-emerald-400"
+          />
+        ),
+      )}
 
       <button
         type="submit"
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-lime-400 text-black font-semibold hover:scale-105 transition"
+        disabled={loading}
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-lime-400 text-black font-semibold hover:scale-105 transition disabled:opacity-60"
       >
-        Predict Crop
+        {loading ? "Predicting..." : "Predict Crop"}
       </button>
     </form>
   );

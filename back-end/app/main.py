@@ -1,62 +1,42 @@
-"""
-main.py
-
-PURPOSE:
-- Entry point of FastAPI application
-- Starts backend server
-- Registers basic test route
-"""
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import get_database
-
-from app.routes.user_routes import router as user_router
-from app.routes.history_routes import router as history_router
-from app.routes.predict_routes import router as predict_router
-
-
-# Create FastAPI app instance
 app = FastAPI(
     title="Crop Cast API",
-    description="Weather-Based Crop Recommendation System",
+    description="Weather based crop recommendation system",
     version="1.0.0"
 )
 
-# CORS configuration
-# This allows React frontend to communicate with FastAPI
+# CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React dev server
+    allow_origins=[
+        "http://localhost:5173",  # Vite frontend
+        "http://127.0.0.1:5173"
+        ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # GET, POST, PUT, DELETE
+    allow_headers=["*"],  # Authorization, Content-Type, etc
 )
 
-# REGISTER ROUTERS HERE 
-app.include_router(user_router)
-app.include_router(history_router)
+# ==============================
+# ROUTERS
+# ==============================
+from app.api.crop_routes import router as crop_router
+from app.api.crop_routes import router as crop_details_router
+from app.api.predictions import router as predict_router
+from app.api.auth import router as auth_router
+from app.api.predictions import router as history_router
+from app.api.news import router as news_router
+
+# Register routes
+app.include_router(crop_router)
+app.include_router(crop_details_router)
 app.include_router(predict_router)
+app.include_router(auth_router)
+app.include_router(history_router)
+app.include_router(news_router)
 
-
-# Health check route (TEST)
-@app.get("/db-test")
-async def database_test():
-    """
-    Test MongoDB connection
-    """
-    db = get_database()
-    collections = await db.list_collection_names()
-    return {
-        "status": "MongoDB connected",
-        "collections": collections
-    }
-
-# Root test endpoint
 @app.get("/")
-async def root():
-    """
-    Root endpoint to verify backend is running
-    """
-    return {"message": "CropCast backend running"}
+def root():
+    return {"status": "Crop Cast Backend Running"}

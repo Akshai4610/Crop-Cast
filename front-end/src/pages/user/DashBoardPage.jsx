@@ -1,40 +1,43 @@
-// DashboardPage.jsx
-/*
-  PURPOSE:
-  - Coordinates WeatherForm & PredictionResult
-  - Simulates ML prediction for now
-*/
-
 import { useState } from "react";
 import WeatherForm from "../../components/user/dashboard/WeatherForm";
 import PredictionResult from "../../components/user/dashboard/PredictionResult";
+import { getCropRecommendation } from "../../services/api";
 
 const DashboardPage = () => {
   const [loading, setLoading] = useState(false);
-  const [crops, setCrops] = useState([]);
+  const [prediction, setPrediction] = useState(null);
 
-  // Simulated prediction
-  const handlePredict = () => {
+  // Called by WeatherForm
+  const handlePredict = async (payload) => {
     setLoading(true);
-    setCrops([]);
+    try {
+      const res = await getCropRecommendation(payload);
 
-    setTimeout(() => {
-      setCrops(["Rice", "Maize", "Cotton"]);
+      // Normalize data shape for PredictionResult
+      setPrediction({
+        crops: [res.recommended_crop],
+        confidence: res.confidence,
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Prediction failed");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
-    <section className="max-w-7xl mx-auto animate-fade-in">
-      <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-emerald-400 to-lime-400 bg-clip-text text-transparent">
-        Crop Recommendation Dashboard
-      </h1>
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* LEFT */}
+      <WeatherForm onPredict={handlePredict} loading={loading} />
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <WeatherForm onPredict={handlePredict} />
-        <PredictionResult loading={loading} crops={crops} />
-      </div>
-    </section>
+      {/* RIGHT */}
+      <PredictionResult
+        crops={prediction?.crops}
+        confidence={prediction?.confidence}
+        loading={loading}
+      />
+    </div>
   );
 };
 

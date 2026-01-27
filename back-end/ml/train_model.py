@@ -1,64 +1,45 @@
 """
-train_model.py
-
-PURPOSE:
-- Train machine learning model for crop recommendation
-- Uses historical weather and crop data
-- Saves trained model and label encoder for inference in FastAPI
-
-USAGE:
-- Run once to train and save model artifacts
-- Do NOT run on every API request
+Train Crop Recommendation Model
+--------------------------------
+This script trains a machine learning model
+using agricultural data and saves it for inference.
 """
 
 import pandas as pd
-import joblib
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import joblib
+import os
 
-
-# ----------------------------
 # Load dataset
-# ----------------------------
-data = pd.read_csv("data/crop_data.csv")
+DATA_PATH = "../dataset/crop_data.csv"
+data = pd.read_csv(DATA_PATH)
 
-# ----------------------------
-# Feature selection
-# ----------------------------
-X = data[["temperature", "humidity", "rainfall"]]
-y = data["crop"]
+# Split features and label
+X = data.drop("label", axis=1)
+y = data["label"]
 
-# ----------------------------
-# Encode target labels
-# ----------------------------
-label_encoder = LabelEncoder()
-y_encoded = label_encoder.fit_transform(y)
-
-# ----------------------------
 # Train-test split
-# ----------------------------
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y_encoded, test_size=0.2, random_state=42
+    X, y, test_size=0.2, random_state=42
 )
 
-# ----------------------------
-# Model initialization
-# ----------------------------
+# Model
 model = RandomForestClassifier(
-    n_estimators=100,
+    n_estimators=200,
     random_state=42
 )
 
-# ----------------------------
-# Model training
-# ----------------------------
+# Train model
 model.fit(X_train, y_train)
 
-# ----------------------------
-# Save trained artifacts
-# ----------------------------
-joblib.dump(model, "models/crop_model.pkl")
-joblib.dump(label_encoder, "models/label_encoder.pkl")
+# Evaluate
+accuracy = accuracy_score(y_test, model.predict(X_test))
+print(f"Model Accuracy: {accuracy * 100:.2f}%")
 
-print("✅ Model and label encoder saved successfully")
+# Save model
+os.makedirs("model", exist_ok=True)
+joblib.dump(model, "model/crop_model.pkl")
+
+print("Model saved as crop_model.pkl")

@@ -1,45 +1,69 @@
-// PredictionResult.jsx
 /*
   PURPOSE:
-  - Display predicted crops
-  - Show loading shimmer when predicting
+  - Display predicted crop
+  - Fetch and show crop details
+  - Show confidence score
 */
 
-const PredictionResult = ({ loading, crops }) => {
-  if (loading) {
-    return (
-      <div className="glass-card animate-pulse">
-        <div className="h-4 bg-white/30 rounded mb-3"></div>
-        <div className="h-4 bg-white/30 rounded mb-3"></div>
-        <div className="h-4 bg-white/30 rounded"></div>
-      </div>
-    );
-  }
+import { useEffect, useState } from "react";
+import { getCropDetails } from "../../../services/api";
 
-  if (!crops.length) {
-    return (
-      <div className="glass-card text-white/60">
-        Prediction results will appear here.
-      </div>
-    );
-  }
+const PredictionResult = ({ crops, confidence, loading }) => {
+  const [cropInfo, setCropInfo] = useState(null);
+
+  const crop = crops?.[0];
+
+  useEffect(() => {
+    if (!crop) return;
+
+    const fetchData = async () => {
+      try {
+        const res = await getCropDetails(crop);
+        setCropInfo(res.exists ? res.data : null);
+      } catch (err) {
+        console.error(err);
+        setCropInfo(null);
+      }
+    };
+
+    fetchData();
+  }, [crop]);
+
+  if (loading)
+    return <div className="glass-card">Predicting crop...</div>;
+
+  if (!crop)
+    return <div className="glass-card">Prediction results appear here</div>;
 
   return (
-    <div className="glass-card">
-      <h3 className="text-xl font-semibold text-emerald-300 mb-4">
-        Recommended Crops
-      </h3>
+    <div className="glass-card space-y-3">
+      <h3 className="text-emerald-300 text-xl">🌱 {crop}</h3>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        {crops.map((crop, index) => (
-          <div
-            key={index}
-            className="p-4 rounded-xl bg-white/20 hover:bg-white/30 transition hover:scale-105"
-          >
-            🌱 {crop}
-          </div>
-        ))}
+      {/* Confidence */}
+      <p>
+        <b>Confidence:</b> {confidence}%
+      </p>
+      <div className="h-2 bg-white/20 rounded">
+        <div
+          className="h-2 bg-emerald-400 rounded"
+          style={{ width: `${confidence}%` }}
+        />
       </div>
+
+      {/* Crop details */}
+      {cropInfo ? (
+        <>
+          <p><b>Growth:</b> {cropInfo.growth_period}</p>
+          <p><b>Climate:</b> {cropInfo.climate}</p>
+          <p><b>Soil:</b> {cropInfo.soil}</p>
+          <p><b>Water:</b> {cropInfo.water}</p>
+          <p className="text-white/70">{cropInfo.description}</p>
+        </>
+      ) : (
+        <p className="text-white/60">
+          No details available for this crop.
+        </p>
+      )}
     </div>
   );
 };

@@ -1,11 +1,10 @@
-motor
+fastapi
+uvicorn
+pydantic
+passlib
 numpy
 pandas
+scikit-learn
 joblib
 pymongo
-requests
-pydantic
-scikit-learn
 python-dotenv
-fastapi[standard]
-uvicorn[standard]
