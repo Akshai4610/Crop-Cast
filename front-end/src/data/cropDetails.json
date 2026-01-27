@@ -1,0 +1,23 @@
+{
+  "Rice": {
+    "growth_period": "3–6 months",
+    "climate": "Warm and humid",
+    "soil": "Clayey, loamy",
+    "water": "High water requirement",
+    "description": "Rice is a staple food crop that grows well in flooded fields."
+  },
+  "Wheat": {
+    "growth_period": "4–5 months",
+    "climate": "Cool and dry",
+    "soil": "Well-drained loamy soil",
+    "water": "Moderate",
+    "description": "Wheat is a rabi crop grown in winter season."
+  },
+  "Maize": {
+    "growth_period": "3–4 months",
+    "climate": "Warm",
+    "soil": "Fertile, well-drained soil",
+    "water": "Moderate",
+    "description": "Maize is a versatile cereal crop grown worldwide."
+  }
+}
