@@ -1,22 +1,42 @@
-// src/pages/user/NewsPage.jsx
 /*
   PURPOSE:
-  - Displays agriculture and weather related news
+  - Show agriculture news
+  - Admin can delete
 */
 
-const NewsPage = () => {
-  return (
-    <section className="max-w-6xl mx-auto animate-fade-in">
-      <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-lime-400 bg-clip-text text-transparent">
-        Agriculture News
-      </h1>
+import { useEffect, useState } from "react";
 
-      <div className="glass-card">
-        <p className="text-white/80">
-          Latest agriculture and weather news will be shown here.
-        </p>
-      </div>
-    </section>
+const NewsPage = () => {
+  const [news, setNews] = useState([]);
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/news")
+      .then(res => res.json())
+      .then(setNews);
+  }, []);
+
+  return (
+    <div>
+      {news.map((n, i) => (
+        <div key={i} className="glass-card">
+          <h3>{n.title}</h3>
+          <p>{n.content}</p>
+
+          {user.role === "admin" && (
+            <button
+              onClick={() =>
+                fetch(`http://localhost:8000/api/news/${n.title}`, {
+                  method: "DELETE",
+                })
+              }
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
   );
 };
 

@@ -22,12 +22,12 @@ app.add_middleware(
 # ==============================
 # ROUTERS
 # ==============================
-from app.api.crop_routes import router as crop_router
-from app.api.crop_routes import router as crop_details_router
-from app.api.predictions import router as predict_router
 from app.api.auth import router as auth_router
-from app.api.predictions import router as history_router
 from app.api.news import router as news_router
+from app.api.crop_routes import router as crop_router
+from app.api.predictions import router as history_router
+from app.api.predictions import router as predict_router
+from app.api.crop_routes import router as crop_details_router
 
 # Register routes
 app.include_router(crop_router)

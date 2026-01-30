@@ -21,3 +21,5 @@ crop_collection = db["crop_details"]
 users_collection = db["users"]  # if you implement user accounts
 news_collection = db["news"]   # stores news
 predictions_collection = db["predictions"]  # store user predictions
+print("Collections", db.list_collection_names())
+print("One user", users_collection.find_one())  # quick check

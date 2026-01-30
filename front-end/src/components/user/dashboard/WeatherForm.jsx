@@ -72,7 +72,7 @@ const WeatherForm = ({ onPredict, loading }) => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-lime-400 text-black font-semibold hover:scale-105 transition disabled:opacity-60"
+        className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-lime-400 text-black font-semibold hover:scale-105 transition disabled:opacity-60"
       >
         {loading ? "Predicting..." : "Predict Crop"}
       </button>

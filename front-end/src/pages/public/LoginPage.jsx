@@ -1,15 +1,12 @@
 // src/pages/public/LoginPage.jsx
 /*
   Login Page
-  - Glassmorphism card design
-  - Gradient buttons
-  - Navbar & Footer visible
-  - Smooth fade-in
-  - Link to Signup page
+  - Handles user authentication
+  - Stores JWT + role in localStorage
+  - Redirects user based on role
 */
 
-import { Link } from "react-router-dom";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 import Navbar from "../../components/common/Navbar";
@@ -19,59 +16,90 @@ const LoginPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Show message if redirected from signup
   useEffect(() => {
     if (location.state?.fromSignup) {
-      // Optional: show toast/message
       alert("Signup successful! Please login.");
     }
   }, [location]);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+  // 🔐 Login handler
+  const handleLogin = async (e) => {
+    e.preventDefault(); // VERY IMPORTANT
 
-    // TODO: Add API call to login
-    console.log("Login success");
+    try {
+      const res = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: e.target.email.value,
+          password: e.target.password.value,
+        }),
+      });
 
-    // Redirect to user dashboard after login
-    navigate("/user/dashboard");
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.detail || "Login failed");
+        return;
+      }
+
+      // ✅ Save full user info (token, role, username)
+      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("username", data.username);
+
+      // 🔀 Role-based redirect
+      if (data.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/user/dashboard");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Server error. Please try again later.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-900 to-green-900 flex flex-col">
+    <div className="min-h-screen bg-linear-to-br from-gray-900 via-emerald-900 to-green-900 flex flex-col">
       <Navbar />
 
-      <main className="flex-grow flex items-center justify-center px-6 py-24">
+      <main className="grow flex items-center justify-center px-6 py-24">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-10 max-w-md w-full shadow-2xl animate-fade-in">
           <h2 className="text-3xl font-bold text-white mb-6 text-center">
             Login to CropCast
           </h2>
 
           <form className="space-y-5" onSubmit={handleLogin}>
+            {/* Username */}
             <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">
-                📧
-              </span>
+              <span className="absolute left-3 top-3 text-white text-lg">👤</span>
               <input
                 type="email"
-                placeholder="Email"
+                name="email" // ✅ FIXED
+                placeholder="Username"
+                required
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
               />
             </div>
 
+            {/* Password */}
             <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">
-                🔒
-              </span>
+              <span className="absolute left-3 top-3 text-white text-lg">🔒</span>
               <input
                 type="password"
+                name="password"
                 placeholder="Password"
+                required
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-black font-semibold shadow-lg hover:scale-105 transition"
+              className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-green-500 text-black font-semibold shadow-lg hover:scale-105 transition"
             >
               Login
             </button>

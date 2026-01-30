@@ -9,6 +9,30 @@ const API = axios.create({
   },
 });
 
+// ML Prediction API (alias for clarity in dashboard)
+export const predictCrop = async (formData) => {
+  try {
+
+    // Ensure numbers are sent (not strings)
+    const payload = {
+      nitrogen: Number(formData.nitrogen),
+      phosphorus: Number(formData.phosphorus),
+      potassium: Number(formData.potassium),
+      temperature: Number(formData.temperature),
+      humidity: Number(formData.humidity),
+      ph: Number(formData.ph),
+      rainfall: Number(formData.rainfall),
+    };
+
+    const response = await API.post("/predict", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Prediction error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
 // Crop Recommendation API
 export const getCropRecommendation = async (cropData) => {
   try {

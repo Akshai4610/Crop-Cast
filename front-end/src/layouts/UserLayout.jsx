@@ -10,7 +10,12 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import Footer from "../components/common/Footer";
 
 const UserLayout = () => {
-  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  // If not logged in → redirect
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const handleLogout = () => {
     // Clear user auth info here (if using context or localStorage)

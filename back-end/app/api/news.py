@@ -1,19 +1,33 @@
-from fastapi import APIRouter, HTTPException
-from app.database.mongodb import news_collection
+"""
+News API
+========
+Admin: add/edit/delete
+User: read only
+"""
+
+from fastapi import APIRouter
 from pydantic import BaseModel
+from app.database.mongodb import news_collection
 
 router = APIRouter(prefix="/api/news", tags=["News"])
 
-class NewsItem(BaseModel):
+class News(BaseModel):
     title: str
     content: str
 
-@router.post("/add")
-def add_news(news: NewsItem):
+
+@router.post("/")
+def add_news(news: News):
     news_collection.insert_one(news.dict())
     return {"message": "News added"}
 
+
 @router.get("/")
 def get_news():
-    news = list(news_collection.find({}, {"_id":0}))
-    return {"news": news}
+    return list(news_collection.find({}, {"_id": 0}))
+
+
+@router.delete("/{title}")
+def delete_news(title: str):
+    news_collection.delete_one({"title": title})
+    return {"message": "News deleted"}

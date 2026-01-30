@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 pydantic
+pydantic[email]
 passlib
 numpy
 pandas
@@ -8,3 +9,5 @@ scikit-learn
 joblib
 pymongo
 python-dotenv
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
