@@ -1,13 +1,11 @@
-// src/pages/public/LoginPage.jsx
 /*
-  Login Page
-  - Handles user authentication
-  - Stores JWT + role in localStorage
-  - Redirects user based on role
+  - Handles authentication
+  - Gracefully handles 401 (invalid credentials)
+  - Avoids console error spam
 */
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import Navbar from "../../components/common/Navbar";
 import Footer from "../../components/common/Footer";
@@ -15,6 +13,8 @@ import Footer from "../../components/common/Footer";
 const LoginPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
 
   // Show message if redirected from signup
   useEffect(() => {
@@ -26,23 +26,31 @@ const LoginPage = () => {
   // 🔐 Login handler
   const handleLogin = async (e) => {
     e.preventDefault(); // VERY IMPORTANT
+    setLoading(true);
+
+    const email = e.target.email.value;
+    const password = e.target.password.value;
 
     try {
       const res = await fetch("http://localhost:8000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: e.target.email.value,
-          password: e.target.password.value,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      // 🔐 Invalid credentials → expected case
+      if (res.status === 401) {
+        alert("Invalid email or password");
+        setLoading(false);
+        return; // ⛔ STOP here (no console error)
+      }
 
       if (!res.ok) {
         alert(data.detail || "Login failed");
         return;
       }
+
+      const data = await res.json();
 
       // ✅ Save full user info (token, role, username)
       localStorage.setItem("user", JSON.stringify(data));
@@ -56,9 +64,10 @@ const LoginPage = () => {
       } else {
         navigate("/user/dashboard");
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      alert("Server error. Please try again later.");
+    } catch (err) {
+      alert("Server not reachable. Is backend running?");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,7 +84,9 @@ const LoginPage = () => {
           <form className="space-y-5" onSubmit={handleLogin}>
             {/* Username */}
             <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">👤</span>
+              <span className="absolute left-3 top-3 text-white text-lg">
+                👤
+              </span>
               <input
                 type="email"
                 name="email" // ✅ FIXED
@@ -87,7 +98,9 @@ const LoginPage = () => {
 
             {/* Password */}
             <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">🔒</span>
+              <span className="absolute left-3 top-3 text-white text-lg">
+                🔒
+              </span>
               <input
                 type="password"
                 name="password"
@@ -99,9 +112,10 @@ const LoginPage = () => {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-green-500 text-black font-semibold shadow-lg hover:scale-105 transition"
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
 

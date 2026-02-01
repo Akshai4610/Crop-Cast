@@ -16,23 +16,17 @@ const DashBoardPage = () => {
   const [confidence, setConfidence] = useState(0);
   const [top3, setTop3] = useState([]);
 
-  const user = JSON.parse(localStorage.getItem("user"));
-
   const handlePredict = async (inputData) => {
     try {
       setLoading(true);
 
-      const res = await predictCrop({
-        username: user.username,
-        ...inputData,
-      });
-
+      const res = await predictCrop(inputData);
+      console.log("Dashboard got =>", res); 
       // Expecting backend response:
       // { crop: "rice", confidence: 87 }
-      setCrops([res.recommended_crop]);
+      setCrops(res.top_3.map(x => x.crop))
       setConfidence(res.confidence);
       setTop3(res.top_3);
-
     } catch (err) {
       //console.error(err);
       alert("Prediction failed");

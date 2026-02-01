@@ -6,19 +6,23 @@
   - Sticky Footer
 */
 
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, Navigate, useNavigate } from "react-router-dom";
 import Footer from "../components/common/Footer";
 
 const UserLayout = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
 
-  // If not logged in → redirect
-  if (!user) {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isGuest = localStorage.getItem("isGuest");
+
+  // ✅ Allow logged-in users OR guest users
+  if (!user && !isGuest) {
     return <Navigate to="/login" replace />;
   }
 
   const handleLogout = () => {
     // Clear user auth info here (if using context or localStorage)
+    localStorage.clear();
     navigate("/"); // redirect to public home page
   };
 
@@ -27,41 +31,28 @@ const UserLayout = () => {
       {/* Navbar */}
       <nav className="bg-gray-900/90 backdrop-blur-md px-6 py-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
         <h1 className="text-2xl font-bold text-emerald-400">CropCast</h1>
-        <ul className="flex space-x-6 text-white font-semibold">
+
+        <ul className="flex space-x-6 font-semibold">
           <li>
-            <NavLink
-              to="/user/dashboard"
-              className={({ isActive }) =>
-                isActive ? "border-b-2 border-emerald-400" : "hover:border-b-2 hover:border-white"
-              }
-            >
-              Dashboard
-            </NavLink>
+            <NavLink to="/user/dashboard">Dashboard</NavLink>
           </li>
-          <li>
-            <NavLink
-              to="/user/profile"
-              className={({ isActive }) =>
-                isActive ? "border-b-2 border-emerald-400" : "hover:border-b-2 hover:border-white"
-              }
-            >
-              Profile
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/user/news"
-              className={({ isActive }) =>
-                isActive ? "border-b-2 border-emerald-400" : "hover:border-b-2 hover:border-white"
-              }
-            >
-              News
-            </NavLink>
-          </li>
+
+          {/* ❌ Hide for guest */}
+          {!isGuest && (
+            <>
+              <li>
+                <NavLink to="/user/profile">Profile</NavLink>
+              </li>
+              <li>
+                <NavLink to="/user/news">News</NavLink>
+              </li>
+            </>
+          )}
+
           <li>
             <button
               onClick={handleLogout}
-              className="bg-emerald-400/80 hover:bg-emerald-400 px-3 py-1 rounded transition font-semibold text-black"
+              className="bg-emerald-400 px-3 py-1 rounded text-black"
             >
               Logout
             </button>
@@ -69,8 +60,7 @@ const UserLayout = () => {
         </ul>
       </nav>
 
-      {/* Page Content */}
-      <main className="flex-grow p-6">
+      <main className="grow p-6">
         <Outlet />
       </main>
 

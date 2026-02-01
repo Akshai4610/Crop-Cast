@@ -2,62 +2,101 @@
 Prediction API
 ==============
 Responsibilities:
-- Save every prediction made by a user
-- Fetch prediction history for a user
+✔ Run ML prediction
+✔ Save prediction automatically
+✔ Return result to frontend
+✔ Provide history
 """
 
 from fastapi import APIRouter
 from datetime import datetime, timezone
 from pydantic import BaseModel
-from typing import Dict
-from app.database.mongodb import predictions_collection
+from typing import List
 
+from app.database.mongodb import predictions_collection
+from app.services.prediction import predict_crop
+
+
+# ======================================================
+# Router
+# Final routes:
+# POST   /api/predictions
+# GET    /api/predictions/{email}
+# ======================================================
 router = APIRouter(prefix="/api/predictions", tags=["Predictions"])
 
 
-# =======================
-# Pydantic Schema
-# =======================
+# ======================================================
+# Request Schema (what frontend must send)
+# ======================================================
+class PredictionRequest(BaseModel):
+    email: str
 
-class PredictionCreate(BaseModel):
-    username: str
-    input_data: Dict[str, float]
-    predicted_crop: str
-    confidence: float
+    N: float
+    P: float
+    K: float
+    temperature: float
+    humidity: float
+    ph: float
+    rainfall: float
 
 
-# =======================
-# Save Prediction
-# =======================
-
-@router.post("/save")
-def save_prediction(pred: PredictionCreate):
+# ======================================================
+# 🔹 Predict + Save
+# ======================================================
+@router.post("")
+def predict_and_save(pred: PredictionRequest):
     """
-    Store a prediction record in MongoDB
+    Steps:
+    1. Call ML model
+    2. Save result in MongoDB
+    3. Return result
     """
+
+    # Convert request → dict for ML model
+    input_data = {
+        "N": pred.N,
+        "P": pred.P,
+        "K": pred.K,
+        "temperature": pred.temperature,
+        "humidity": pred.humidity,
+        "ph": pred.ph,
+        "rainfall": pred.rainfall,
+    }
+
+    # Run ML prediction
+    result = predict_crop(input_data)
+    # result = {
+    #   predicted_crop,
+    #   confidence,
+    #   top_3
+    # }
+
+    # Save to DB
     predictions_collection.insert_one({
-        "username": pred.username,
-        "input_data": pred.input_data,
-        "predicted_crop": pred.predicted_crop,
-        "confidence": pred.confidence,
+        "email": pred.email,
+        "input_data": input_data,
+        "predicted_crop": result["predicted_crop"],
+        "confidence": result["confidence"],
+        "top_3": result["top_3"],
         "timestamp": datetime.now(timezone.utc)
     })
 
-    return {"message": "Prediction saved successfully"}
+    return result
 
 
-# =======================
-# Get Prediction History
-# =======================
-
-@router.get("/history/{username}")
-def get_prediction_history(username: str):
+# ======================================================
+# 🔹 Prediction History
+# ======================================================
+@router.get("/{email}")
+def get_prediction_history(email: str):
     """
-    Fetch all predictions made by a user
+    Return all predictions of a user
     """
+
     history = list(
         predictions_collection.find(
-            {"username": username},
+            {"email": email},   # FIXED (not username)
             {"_id": 0}
         )
     )
