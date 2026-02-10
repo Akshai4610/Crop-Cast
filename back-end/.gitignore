@@ -2,9 +2,16 @@
 venv/
 __pycache__/
 *.pyc
+
+# Secrets
 .env
 
-# Node
+# ML
+*.pkl
+ml/model/
+dataset/
+
+# Node (if any tools used)
 node_modules/
 
 # OS
