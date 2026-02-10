@@ -10,6 +10,12 @@ from app.models.crop_model import CropDetails
 
 router = APIRouter(prefix="/api/crop", tags=["Crop Details"])
 
+# Get ALL crops (for admin table)
+# GET /api/crop/all
+@router.get("/all")
+def get_all_crops():
+    crops = list(crop_collection.find({}, {"_id": 0}))
+    return crops
 
 @router.get("/{crop_name}")
 def get_crop_details(crop_name: str):
@@ -26,6 +32,7 @@ def get_crop_details(crop_name: str):
 
     return {"exists": True, "data": crop}
 
+# ✅ Add crop (admin)
 
 @router.post("/add")
 def add_crop_details(crop: CropDetails):

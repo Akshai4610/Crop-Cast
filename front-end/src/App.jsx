@@ -12,6 +12,9 @@ import HomePage from "./pages/public/HomePage";
 import LoginPage from "./pages/public/LoginPage";
 import SignupPage from "./pages/public/SignupPage";
 
+/* Admin layout + pages */
+import AdminCropManagementPage from "./pages/admin/CropManagementPage";
+
 /* User layout + pages */
 import UserLayout from "./layouts/UserLayout";
 import DashboardPage from "./pages/user/DashBoardPage";
@@ -26,6 +29,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+
+        {/* Admin area */}
+        <Route path="/admin/crops" element={<AdminCropManagementPage />} />
 
         {/* User area (nested) */}
         <Route path="/user" element={<UserLayout />}>

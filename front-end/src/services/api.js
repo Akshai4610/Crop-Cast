@@ -1,5 +1,4 @@
 // ======================================================
-// services/api.js
 // Central place for ALL backend API calls
 // ======================================================
 
@@ -11,7 +10,7 @@ import axios from "axios";
 // NEVER add /api again in routes
 // ======================================================
 const API = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: "http://localhost:8000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -71,5 +70,47 @@ export const getCropDetails = async (cropName) => {
 
 export const addCropDetails = async (data) => {
   const res = await API.post("/crop/add", data);
+  return res.data;
+};
+
+// ======================================================
+// 🔹 ADMIN → Crop CRUD
+// ======================================================
+
+// GET all crops
+export const getAllCrops = async () => {
+  const res = await API.get("/admin/crops/");
+  return res.data;
+};
+
+// DELETE crop
+export const deleteCrop = async (name) => {
+  const res = await API.delete(`/admin/crops/${name}`);
+  return res.data;
+};
+
+// ADD crop
+export const addCrop = async (data) => {
+  const res = await API.post("/admin/crops/", data);
+  return res.data;
+};
+
+// UPDATE crop
+export const updateCrop = async (name, data) => {
+  const res = await API.put(`/admin/crops/${name}`, data);
+  return res.data;
+};
+
+// ======================================================
+// 🔹 ADMIN → Dataset rows (ML training data)
+// ======================================================
+
+export const addDatasetRow = async (data) => {
+  const res = await API.post("/admin/dataset/", data);
+  return res.data;
+};
+
+export const getDatasetRows = async () => {
+  const res = await API.get("/admin/dataset/");
   return res.data;
 };
