@@ -29,10 +29,20 @@ export default function CropTable({ crops = [], refresh, setEditData }) {
   // =========================================
   // Filtered list (optimized with useMemo)
   // =========================================
+
   const filtered = useMemo(() => {
-    return crops.filter((c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()),
-    );
+    // Always normalize to array
+    const list = Array.isArray(crops)
+      ? crops
+      : Array.isArray(crops?.data)
+        ? crops.data
+        : [];
+
+    if (!search.trim()) return list;
+
+    const term = search.toLowerCase();
+
+    return list.filter((c) => (c?.name || "").toLowerCase().includes(term));
   }, [crops, search]);
 
   // =========================================
@@ -46,10 +56,13 @@ export default function CropTable({ crops = [], refresh, setEditData }) {
   // Delete crop
   // =========================================
   const remove = async (name) => {
-    setLoading(true);
-    await deleteCrop(name);
-    await refresh(); // reload from parent
-    setLoading(false);
+    try {
+      setLoading(true);
+      await deleteCrop(name);
+      await refresh?.();
+    } finally {
+      setLoading(false);
+    }
   };
 
   // =========================================
@@ -57,7 +70,6 @@ export default function CropTable({ crops = [], refresh, setEditData }) {
   // =========================================
   return (
     <div className="space-y-4">
-      {/* Header */}
       <h2 className="text-xl font-semibold text-emerald-400">🌱 Crop List</h2>
 
       {/* Search */}
@@ -71,21 +83,17 @@ export default function CropTable({ crops = [], refresh, setEditData }) {
         className="w-full p-3 rounded-xl bg-white/20 outline-none"
       />
 
-      {/* Loader */}
       {loading && <p className="text-gray-300 text-sm">Updating...</p>}
 
-      {/* Empty */}
       {paginated.length === 0 && (
         <p className="text-gray-400">No crops found</p>
       )}
 
-      {/* Crop rows */}
       {paginated.map((c) => (
         <div
           key={c._id}
-          className="flex justify-between items-center bg-white/10 p-3 rounded-xl hover:bg-white/20 transition"
+          className="flex justify-between items-center bg-white/10 p-3 rounded-xl"
         >
-          {/* LEFT → Image + Name */}
           <div className="flex items-center gap-3">
             {c.image_url && (
               <img
@@ -94,48 +102,39 @@ export default function CropTable({ crops = [], refresh, setEditData }) {
                 className="h-10 w-10 object-cover rounded-lg"
               />
             )}
-
-            <span className="font-medium">{c.name}</span>
+            <span>{c.name}</span>
           </div>
 
-          {/* RIGHT → Actions */}
           <div className="space-x-4 text-sm">
-            <button
-              onClick={() => setEditData(c)}
-              className="text-blue-400 hover:text-blue-300"
-            >
+            <button onClick={() => setEditData?.(c)} className="text-blue-400">
               Edit
             </button>
 
-            <button
-              onClick={() => remove(c.name)}
-              className="text-red-400 hover:text-red-300"
-            >
+            <button onClick={() => remove(c.name)} className="text-red-400">
               Delete
             </button>
           </div>
         </div>
       ))}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex gap-3 justify-end mt-3 text-sm">
+        <div className="flex gap-3 justify-end">
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className="px-3 py-1 bg-white/20 rounded disabled:opacity-40"
+            className="px-3 py-1 bg-white/20 rounded"
           >
             Prev
           </button>
 
-          <span className="text-gray-400">
+          <span>
             {page} / {totalPages}
           </span>
 
           <button
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1 bg-white/20 rounded disabled:opacity-40"
+            className="px-3 py-1 bg-white/20 rounded"
           >
             Next
           </button>

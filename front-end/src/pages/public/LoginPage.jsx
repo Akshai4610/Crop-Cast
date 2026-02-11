@@ -60,7 +60,7 @@ const LoginPage = () => {
 
       // 🔀 Role-based redirect
       if (data.role === "admin") {
-        navigate("/admin/dashboard");
+        navigate("/admin/crop-management");
       } else {
         navigate("/user/dashboard");
       }

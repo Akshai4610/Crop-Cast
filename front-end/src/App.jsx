@@ -31,7 +31,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
 
         {/* Admin area */}
-        <Route path="/admin/crops" element={<AdminCropManagementPage />} />
+        <Route path="/admin/crop-management" element={<AdminCropManagementPage />} />
 
         {/* User area (nested) */}
         <Route path="/user" element={<UserLayout />}>
