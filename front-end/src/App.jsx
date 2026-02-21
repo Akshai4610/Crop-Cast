@@ -25,14 +25,16 @@ function App() {
   return (
     <Router>
       <Routes>
+        
         {/* Public area */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-
-        {/* Admin area */}
-        <Route path="/admin/crop-management" element={<AdminCropManagementPage />} />
-
+        
+        {/* Admin */}
+        <Route path="/admin/crops" element={<AdminCropManagementPage/>}/>
+        <Route path="/admin/dataset" element={<AdminCropManagementPage/>}/>
+        
         {/* User area (nested) */}
         <Route path="/user" element={<UserLayout />}>
           <Route path="dashboard" element={<DashboardPage />} />
@@ -42,7 +44,6 @@ function App() {
           {/* Default /user -> redirect to /user/dashboard (simple fallback) */}
           <Route index element={<DashboardPage />} />
         </Route>
-
         {/* Fallback to home for all unmatched routes */}
         <Route path="*" element={<HomePage />} />
       </Routes>

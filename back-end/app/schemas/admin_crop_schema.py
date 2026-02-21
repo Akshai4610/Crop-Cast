@@ -6,16 +6,15 @@
 from pydantic import BaseModel
 from typing import Optional
 
-
 class CropCreate(BaseModel):
     name: str
-    description: str
-    growth_tips: str
-    climate: str
-    image_url: Optional[str] = None   # image path or url
-
+    description: Optional[str] = ""
+    growth_tips: Optional[str] = ""
+    climate: Optional[str] = ""
+    image_url: Optional[str] = ""   # image path or url
 
 class CropUpdate(BaseModel):
+    name: Optional[str] = None
     description: Optional[str] = None
     growth_tips: Optional[str] = None
     climate: Optional[str] = None

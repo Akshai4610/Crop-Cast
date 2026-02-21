@@ -4,6 +4,9 @@
 # PyMongo SYNC version (NO async/await)
 # ===================================================
 
+# DELETE crop (by ObjectId)
+from bson import ObjectId
+
 from fastapi import APIRouter, HTTPException
 from app.database.mongodb import crop_collection
 from app.schemas.admin_crop_schema import CropCreate, CropUpdate
@@ -22,7 +25,7 @@ def add_crop(crop: CropCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Crop already exists")
 
-    crop_collection.insert_one(crop.dict())
+    crop_collection.insert_one(crop.model_dump())
 
     return {"message": "Crop added successfully"}
 
@@ -46,29 +49,41 @@ def get_all_crops():
 # ================================
 # UPDATE crop
 # ================================
-@router.put("/{name}")
-def update_crop(name: str, crop: CropUpdate):
+@router.put("/{id}")
+def update_crop(id: str, crop: CropUpdate):
 
-    result = crop_collection.update_one(
-        {"name": name},
-        {"$set": crop.model_dump(exclude_none=True)}
-    )
+    try:
+        result = crop_collection.update_one(
+            {"_id": ObjectId(id)},
+            {"$set": crop.model_dump(exclude_none=True)}
+        )
 
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Crop not found")
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Crop not found")
 
-    return {"message": "Crop updated successfully"}
+        return {"message": "Crop updated successfully"}
+
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid crop id")
 
 
 # ================================
 # DELETE crop
 # ================================
-@router.delete("/{name}")
-def delete_crop(name: str):
+@router.delete("/{id}")
+def delete_crop(id: str):
 
-    result = crop_collection.delete_one({"name": name})
+    """
+    Delete crop using MongoDB _id
+    Frontend sends _id → safest & industry standard
+    """
+    try:
+        result = crop_collection.delete_one({"_id": ObjectId(id)})
 
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Crop not found")
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Crop not found")
 
-    return {"message": "Crop deleted"}
+        return {"message": "Crop deleted successfully"}
+
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid crop id")

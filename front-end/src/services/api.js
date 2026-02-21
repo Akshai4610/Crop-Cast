@@ -82,23 +82,26 @@ export const getAllCrops = async () => {
   return res.data;
 };
 
-// DELETE crop
-export const deleteCrop = async (name) => {
-  const res = await API.delete(`/admin/crops/${name}`);
-  return res.data;
-};
-
-// ADD crop
+// Add crop
 export const addCrop = async (data) => {
-  const res = await API.post("/admin/crops/", data);
-  return res.data;
+   try {
+      const res = await API.post("/admin/crops/", data)
+      return res.data
+   } catch (error) {
+      throw error
+   }
+}
+
+// Update crop
+export const updateCrop = async (id, data) => {
+  return await API.put(`/admin/crops/${id}/`, data);
 };
 
-// UPDATE crop
-export const updateCrop = async (name, data) => {
-  const res = await API.put(`/admin/crops/${name}`, data);
-  return res.data;
+// Delete crop
+export const deleteCrop = async (id) => {
+  return await API.delete(`/admin/crops/${id}/`);
 };
+
 
 // ======================================================
 // 🔹 ADMIN → Dataset rows (ML training data)
