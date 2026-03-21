@@ -11,11 +11,11 @@ CropTable (FINAL PRODUCTION FIXED VERSION)
 */
 
 import { useState, useMemo, useEffect } from "react";
-import { deleteCrop } from "../../services/api";
-import DeleteConfirmModal from "../common/DeleteConfirmModal";
-import useDebounce from "../common/useDebounce";
-import Loader from "../common/Loader";
-import { useToast } from "../../context/ToastContext";
+import { deleteCrop } from "../../../services/api";
+import DeleteConfirmModal from "../../common/DeleteConfirmModal";
+import useDebounce from "../../common/useDebounce";
+import Loader from "../../common/Loader";
+import { useToast } from "../../../context/ToastContext";
 
 export default function CropTable({ crops = [], refresh, setEditData }) {
   const { showToast } = useToast();

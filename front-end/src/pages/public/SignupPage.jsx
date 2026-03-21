@@ -1,56 +1,58 @@
-// src/pages/public/SignupPage.jsx
-/*
-  Signup Page
-  - Glassmorphism card design
-  - Gradient buttons
-  - Navbar & Footer visible
-  - Smooth fade-in
-  - Link to Login page
-*/
-
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 import Navbar from "../../components/common/Navbar";
 import Footer from "../../components/common/Footer";
 
-const SignupPage = () => {
+import FloatingInput from "../../components/auth/FloatingInput";
+import PasswordStrength from "../../components/auth/PasswordsStrength";
+import OTPModal from "../../components/auth/OTPModal";
+
+import { registerUser } from "../../services/api";
+
+export default function SignupPage() {
   const navigate = useNavigate();
 
-  // Update form submission
+  const [form, setForm] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+  });
+
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [otpOpen, setOtpOpen] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    //API call to signup user
-    const payload = {
-      fullname: e.target.fullname.value,
-      email: e.target.email.value,
-      password: e.target.password.value,
-    };
+    setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      await registerUser(form);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.detail || "Signup failed");
-        return;
-      }
-
-      // Redirect to login page
-      navigate("/login", { state: { fromSignup: true } });
-      
+      // open OTP modal instead of redirect
+      setOtpOpen(true);
     } catch (err) {
-      console.error(err);
-      alert("Server error");
+      alert(err?.response?.data?.detail || "Signup failed");
     }
-    
-    // Simulate signup success
-    console.log("Signup success");
+
+    setLoading(false);
+  };
+
+  const handleVerifyOTP = (otp) => {
+    console.log("OTP:", otp);
+
+    setOtpOpen(false);
+
+    alert("🎉 Email verified successfully!");
+
+    navigate("/login");
   };
 
   return (
@@ -58,71 +60,78 @@ const SignupPage = () => {
       <Navbar />
 
       <main className="grow flex items-center justify-center px-6 py-24">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-10 max-w-md w-full shadow-2xl animate-fade-in">
+        <div className="glass-card max-w-md w-full animate-fade-in">
           <h2 className="text-3xl font-bold text-white mb-6 text-center">
-            Create an Account
+            Create Account
           </h2>
 
           <form className="space-y-5" onSubmit={handleSignup}>
-            <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">
-                👤
-              </span>
-              <input
-                type="text"
-                name="fullname"
-                placeholder="Full Name"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
-              />
-            </div>
+            <FloatingInput
+              name="fullname"
+              label="Full Name"
+              value={form.fullname}
+              onChange={handleChange}
+            />
+
+            <FloatingInput
+              name="email"
+              label="Email"
+              value={form.email}
+              onChange={handleChange}
+            />
 
             <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">
-                📧
-              </span>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
-              />
-            </div>
-
-            <div className="relative">
-              <span className="absolute left-3 top-3 text-white text-lg">
-                🔒
-              </span>
-              <input
-                type="password"
+              <FloatingInput
+                type={showPass ? "text" : "password"}
                 name="password"
-                placeholder="Password"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 border border-gray-600 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+                label="Password"
+                value={form.password}
+                onChange={handleChange}
               />
+
+              {/* 🔥 Animated Eye Button */}
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="absolute right-3 top-4 text-gray-300 hover:text-white transition duration-300"
+              >
+                <span className="relative flex items-center justify-center">
+                  {/* Eye */}
+                  <span
+                    className={`transition-all duration-300 ${showPass ? "scale-90 opacity-70" : "scale-100"}`}
+                  >
+                    {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </span>
+
+                  {/* Blink overlay */}
+                  <span
+                    className={`absolute w-full h-0.5 bg-white transition-all duration-300 
+        ${showPass ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0"}
+      `}
+                  ></span>
+                </span>
+              </button>
+
+              <PasswordStrength password={form.password} />
             </div>
 
             <button
-              type="submit"
-              className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-green-500 text-black font-semibold shadow-lg hover:scale-105 transition"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-green-500 text-black font-semibold flex justify-center"
             >
-              Sign Up
+              {loading ? "Creating..." : "Sign Up"}
             </button>
           </form>
-
-          <p className="text-white/70 text-center mt-4">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-emerald-400 font-semibold hover:underline"
-            >
-              Login
-            </Link>
-          </p>
         </div>
       </main>
 
       <Footer />
+
+      <OTPModal
+        open={otpOpen}
+        onClose={() => setOtpOpen(false)}
+        onVerify={handleVerifyOTP}
+      />
     </div>
   );
-};
-
-export default SignupPage;
+}

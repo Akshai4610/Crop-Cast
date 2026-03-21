@@ -4,6 +4,18 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Remove browser default password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* Chrome / Edge autofill icon fix */
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+}
 
 .nav-link {
   position: relative;
@@ -50,6 +62,12 @@ html {
   @apply bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20;
 }
 
+.glass-card{
+background: rgba(255,255,255,0.03);
+border: 1px solid rgba(255,255,255,0.06);
+border-radius: 12px;
+backdrop-filter: blur(12px);
+}
 
 @keyframes slideIn {
   from {
@@ -86,4 +104,43 @@ html {
 @keyframes fadeIn {
   from { opacity: 0 }
   to { opacity: 1 }
+}
+
+input:focus {
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/*News style */
+
+/* Fade In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Scale popup */
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.25s ease;
+}
+
+/* for glass UI */
+.glass {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
 }

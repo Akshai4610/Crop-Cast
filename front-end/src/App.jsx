@@ -14,6 +14,8 @@ import SignupPage from "./pages/public/SignupPage";
 
 /* Admin layout + pages */
 import AdminCropManagementPage from "./pages/admin/CropManagementPage";
+import AdminUserManagementPage from "./pages/admin/UserManagementPage";
+import AdminNewsManagementPage from "./pages/admin/NewsManagementPage";
 
 /* User layout + pages */
 import UserLayout from "./layouts/UserLayout";
@@ -34,6 +36,8 @@ function App() {
         {/* Admin */}
         <Route path="/admin/crops" element={<AdminCropManagementPage/>}/>
         <Route path="/admin/dataset" element={<AdminCropManagementPage/>}/>
+        <Route path="/admin/users" element={<AdminUserManagementPage />} />
+        <Route path="/admin/news" element={<AdminNewsManagementPage />} />
         
         {/* User area (nested) */}
         <Route path="/user" element={<UserLayout />}>

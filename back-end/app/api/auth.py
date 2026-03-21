@@ -9,7 +9,7 @@ from app.database.mongodb import users_collection
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr, Field
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # =======================

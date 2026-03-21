@@ -3,23 +3,35 @@
 Admin Navbar
 - Dropdown navigation
 - Reusable for all admin pages
-- Same style as public navbar (dark theme)
+- Dark theme
 ====================================================
 */
 
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 export default function AdminNavbar() {
   const [open, setOpen] = useState(false);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Close dropdown when route changes
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="bg-gray-900 border-b border-gray-800 px-8 py-4 flex justify-between items-center">
-      <h1 className="text-2xl font-bold text-emerald-400">Admin Panel</h1>
+      <h1
+        className="text-2xl font-bold text-emerald-400 cursor-pointer"
+        onClick={() => navigate("/admin")}
+      >
+        Admin Panel
+      </h1>
 
       <div className="flex gap-8 items-center">
-        
-        {/* Crop Dropdown */}
+        {/* Dropdown */}
         <div className="relative">
           <button
             onClick={() => setOpen(!open)}
@@ -29,13 +41,11 @@ export default function AdminNavbar() {
           </button>
 
           {open && (
-            <div className="absolute top-8  bg-gray-800 rounded-xl shadow-lg p-3 space-y-2 w-48 z-50">
-              {/* Crop CRUD */}
+            <div className="absolute top-8 bg-gray-800 rounded-xl shadow-lg p-3 space-y-2 w-48 z-50">
               <Link to="/admin/crops" className="block hover:text-emerald-400">
                 Crop Details
               </Link>
 
-              {/* Dataset */}
               <Link
                 to="/admin/dataset"
                 className="block hover:text-emerald-400"
@@ -47,11 +57,11 @@ export default function AdminNavbar() {
         </div>
 
         <Link to="/admin/users" className="hover:text-emerald-400">
-          Users
+          User Management
         </Link>
 
         <Link to="/admin/news" className="hover:text-emerald-400">
-          News
+          News Management
         </Link>
       </div>
     </div>

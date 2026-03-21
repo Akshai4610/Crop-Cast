@@ -12,8 +12,8 @@ CropForm (FINAL PRODUCTION STABLE VERSION)
 
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { addCrop, updateCrop } from "../../services/api";
-import { useToast } from "../../context/ToastContext";
+import { addCrop, updateCrop } from "../../../services/api";
+import { useToast } from "../../../context/ToastContext";
 
 export default function CropForm({ refresh, editData, setEditData }) {
   const { showToast } = useToast();

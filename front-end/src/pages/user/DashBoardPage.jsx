@@ -8,6 +8,7 @@
 import { useState } from "react";
 import WeatherForm from "../../components/user/dashboard/WeatherForm";
 import PredictionPanel from "../../components/user/dashboard/PredictionPanel";
+import WeatherWidget from "../../components/common/WeatherWidget";
 import { predictCrop } from "../../services/api";
 
 const DashBoardPage = () => {
@@ -47,6 +48,7 @@ const DashBoardPage = () => {
         top3={top3}
         loading={loading}
       />
+      <WeatherWidget />
     </div>
   );
 };
