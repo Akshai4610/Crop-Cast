@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,12 +15,13 @@ app = FastAPI(
 # ======================================================
 # CORS CONFIG
 # ======================================================
+load_dotenv()
+
+origins = os.getenv("CORS_ORIGINS", "").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,6 +34,7 @@ from app.api.news import router as news_router
 from app.api.auth import router as auth_router
 from app.api.crop_routes import router as crop_router
 from app.api.predictions import router as predictions_router
+from app.api.profile import router as profile_router
 
 from app.api.admin_crop import router as admin_crop_router
 from app.api.admin_dataset import router as admin_dataset_router
@@ -40,6 +44,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(news_router, prefix="/api")
 app.include_router(crop_router, prefix="/api")
 app.include_router(predictions_router, prefix="/api")
+app.include_router(profile_router, prefix="/api")
 
 app.include_router(admin_crop_router, prefix="/api")
 app.include_router(admin_dataset_router, prefix="/api")

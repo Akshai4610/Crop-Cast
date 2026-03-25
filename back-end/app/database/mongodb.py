@@ -4,12 +4,20 @@ MongoDB connection file
 Handles database connection for crop details storage
 SYNC PyMongo version
 """
-
+import os
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
+
+# Get values
+MONGO_URL = os.getenv("MONGO_URL")
+DB_NAME = os.getenv("DB_NAME")
 
 try:
     client = MongoClient(
-        "mongodb://localhost:27017",
+        MONGO_URL,
         serverSelectionTimeoutMS=5000
     )
 

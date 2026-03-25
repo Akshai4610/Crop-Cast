@@ -7,6 +7,8 @@ export default function NewsCard({ item }) {
   const [likes, setLikes] = useState(item.likes || 0);
   const [dislikes, setDislikes] = useState(item.dislikes || 0);
 
+  const FILE= import.meta.env.VITE_FILE_URL
+
   const handleLike = async () => {
     setLikes(likes + 1); // ⚡ instant UI
     await likeNews(item._id);
@@ -27,7 +29,7 @@ export default function NewsCard({ item }) {
       {/* IMAGE */}
       {item.image && (
         <img
-          src={`http://127.0.0.1:8000/${item.image}`}
+          src={`${FILE}/${item.image}`}
           className="w-full h-52 object-cover"
         />
       )}

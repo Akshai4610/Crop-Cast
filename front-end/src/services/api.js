@@ -37,6 +37,20 @@ export const loginUser = async (data) => {
   }
 };
 
+// ======================
+// 👤 PROFILE
+// ======================
+
+export const getProfile = async (email) => {
+  const res = await API.get(`/auth/profile/${email}`);
+  return res.data;
+};
+
+export const updateProfile = async (email, data) => {
+  const res = await API.put(`/auth/profile/${email}`, data);
+  return res.data;
+};
+
 // ======================================================
 // 🌱 CROP PREDICTION
 // ======================================================

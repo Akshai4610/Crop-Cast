@@ -35,22 +35,25 @@ export default function AdminNavbar() {
         <div className="relative">
           <button
             onClick={() => setOpen(!open)}
-            className="hover:text-emerald-400"
+            className="hover:text-emerald-400 flex items-center gap-2"
           >
-            Crop Management ▼
+            Crop Management
+            <span className={`text-xs transition ${open ? "rotate-180" : ""}`}>
+                    ▼
+                  </span>
           </button>
 
           {open && (
-            <div className="absolute top-8 bg-gray-800 rounded-xl shadow-lg p-3 space-y-2 w-48 z-50">
+            <div className="absolute top-8 bg-gray-800 rounded-xl shadow-lg p-3 space-y-2 w-48 z-50 overflow-hidden animate-fade-in">
               <Link to="/admin/crops" className="block hover:text-emerald-400">
-                Crop Details
+                🌾Crop Details
               </Link>
 
               <Link
                 to="/admin/dataset"
                 className="block hover:text-emerald-400"
               >
-                Dataset Manager
+               🔬 Dataset Manager
               </Link>
             </div>
           )}
