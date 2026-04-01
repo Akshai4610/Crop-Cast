@@ -13,7 +13,7 @@ from app.database.mongodb import predictions_collection
 from datetime import datetime, timezone
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/api", tags=["Crop Recommendation"])
+router = APIRouter(tags=["Crop Recommendation"])
 
 
 # ---------------------------

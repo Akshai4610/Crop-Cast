@@ -89,7 +89,7 @@ const ProfileDetails = ({ profile, onEdit }) => {
 
         <button
           onClick={onEdit}
-          className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-green-500 text-black font-semibold shadow-lg hover:scale-105 transition"
+          className="mt-4 w-full py-3 rounded-xl bg-linear-to-r from-emerald-400 to-green-500 text-black font-semibold shadow-lg hover:scale-105 transition"
         >
           Edit Profile
         </button>

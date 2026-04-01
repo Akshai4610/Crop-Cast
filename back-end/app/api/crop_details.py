@@ -8,10 +8,9 @@ from fastapi import APIRouter, HTTPException
 from app.database.mongodb import crop_collection
 from app.models.crop_model import CropDetails
 
-router = APIRouter(prefix="/api/crop", tags=["Crop Details"])
+router = APIRouter(prefix="/crop", tags=["Crop Details"])
 
 # Get ALL crops (for admin table)
-# GET /api/crop/all
 @router.get("/all")
 def get_all_crops():
     crops = list(crop_collection.find({}, {"_id": 0}))
@@ -19,19 +18,28 @@ def get_all_crops():
 
 @router.get("/{crop_name}")
 def get_crop_details(crop_name: str):
-    """
-    Fetch crop details by crop name
-    """
-    crop = crop_collection.find_one(
-        {"crop_name": crop_name},
-        {"_id": 0}  # hide MongoDB internal ID
-    )
+    try:
+        formatted = crop_name.strip().lower().replace(" ", "")
 
-    if not crop:
+        crops = list(crop_collection.find({}, {"_id": 0}))
+
+        for crop in crops:
+            db_name = (
+                crop.get("crop_name", "") or crop.get("name", "")
+            ).strip().lower().replace(" ", "")
+
+            # ✅ FIX: flexible matching
+            if formatted in db_name or db_name in formatted:
+                print(f"✅ Crop FOUND → {crop_name}")
+                return {"exists": True, "data": crop}
+
+        print(f"❌ Crop NOT FOUND → {crop_name}")
         return {"exists": False}
 
-    return {"exists": True, "data": crop}
-
+    except Exception as e:
+        print("🔥 Crop fetch error:", e)
+        return {"exists": False}
+    
 # ✅ Add crop (admin)
 
 @router.post("/add")

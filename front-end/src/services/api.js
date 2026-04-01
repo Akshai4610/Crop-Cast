@@ -31,7 +31,17 @@ export const registerUser = async (data) => {
 export const loginUser = async (data) => {
   try {
     const res = await API.post("/auth/login", data);
+
+    // ✅ STORE USER
+    localStorage.setItem("username", res.data.email);
+
+    // 🔥 ADD THIS (IMPORTANT)
+    if (res.data.premium_key) {
+      localStorage.setItem("premium_key", res.data.premium_key);
+    }
+
     return res.data;
+
   } catch (error) {
     throw error;
   }
@@ -82,9 +92,59 @@ export const predictCrop = async (formData) => {
 // 📜 HISTORY
 // ======================================================
 
-export const getPredictionHistory = async (email) => {
-  const res = await API.get(`/predictions/${email}`);
-  return res.data;
+export const getPredictionHistory = async (email, range = "all") => {
+  try {
+    if (!email) {
+      console.warn("⚠ Email missing");
+      return [];
+    }
+
+    const res = await API.get(`/predictions`, {
+      params: { email, range },
+    });
+
+    // ✅ HANDLE ALL CASES
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+
+    if (Array.isArray(res.data?.history)) {
+      return res.data.history;
+    }
+
+    if (Array.isArray(res.data?.data)) {
+      return res.data.data;
+    }
+
+    return [];
+
+  } catch (err) {
+    console.error("❌ History API error:", err.response?.data || err.message);
+    return [];
+  }
+};
+
+export const deletePredictionHistory = async (email, payload) => {
+  return await API.delete(`/predictions`, {
+    params: { email, ...payload },
+
+    // 🔥 THIS FIXES ARRAY ISSUE
+    paramsSerializer: (params) => {
+      const searchParams = new URLSearchParams();
+
+      Object.keys(params).forEach((key) => {
+        const value = params[key];
+
+        if (Array.isArray(value)) {
+          value.forEach((v) => searchParams.append(key, v));
+        } else {
+          searchParams.append(key, value);
+        }
+      });
+
+      return searchParams.toString();
+    },
+  });
 };
 
 // ======================================================
@@ -92,8 +152,25 @@ export const getPredictionHistory = async (email) => {
 // ======================================================
 
 export const getCropDetails = async (cropName) => {
-  const res = await API.get(`/crop/${cropName}`);
-  return res.data;
+  try {
+    const formatted = cropName
+      ?.toLowerCase()
+      .replace(/\s+/g, "")
+      .trim();
+
+    const res = await API.get(`/crop/${formatted}`);
+
+    console.log("🌾 API Response:", res.data); // debug
+
+    if (res.data?.exists) {
+      return res.data.data;   // ✅ FIXED
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Crop API error:", err.message);
+    return null;
+  }
 };
 
 export const addCropDetails = async (data) => {
@@ -366,3 +443,33 @@ export const getWeather = async (lat, lon) => {
 
 // Example for Kochi 🌴
 export const getKochiWeather = () => getWeather(9.9312, 76.2673);
+
+// ======================================================
+// 🔐 License Check (FIXED ✅)
+// ======================================================
+export const checkPremium = async () => {
+  try {
+    const email = localStorage.getItem("username");
+    const key = localStorage.getItem("premium_key");
+
+    // 🚨 HARD STOP if missing
+    if (!email || !key) {
+      console.warn("Missing premium credentials", { email, key });
+      return false;
+    }
+
+    console.log("🔐 Checking Premium:", { email, key });
+
+    const res = await API.get("/license/check", {
+      params: { email, key },
+    });
+
+    console.log("✅ Premium Response:", res.data);
+
+    return res.data?.premium === true;
+
+  } catch (err) {
+    console.error("❌ License check failed", err.response?.data || err.message);
+    return false;
+  }
+};

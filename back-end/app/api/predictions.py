@@ -8,10 +8,12 @@ Responsibilities:
 ✔ Provide history
 """
 
-from fastapi import APIRouter
-from datetime import datetime, timezone
-from pydantic import BaseModel
 from typing import List
+
+from fastapi import Query
+from fastapi import APIRouter
+from datetime import datetime, timezone, timedelta
+from pydantic import BaseModel
 
 from app.database.mongodb import predictions_collection
 from app.services.prediction import predict_crop
@@ -23,7 +25,7 @@ from app.services.prediction import predict_crop
 # POST   /api/predictions
 # GET    /api/predictions/{email}
 # ======================================================
-router = APIRouter(prefix="/api/predictions", tags=["Predictions"])
+router = APIRouter(prefix="/predictions", tags=["Predictions"])
 
 
 # ======================================================
@@ -84,21 +86,94 @@ def predict_and_save(pred: PredictionRequest):
 
     return result
 
+# ======================================================
+# 🔹 GET HISTORY (WITH PAGINATION + FILTER + DELETE READY)
+# ======================================================
+@router.get("")
+def get_prediction_history(
+    email: str = Query(...),
+    range: str = Query("all"),   # 1h, 24h, 7d, 4w, all
+):
+    
+    now = datetime.now(timezone.utc)
 
-# ======================================================
-# 🔹 Prediction History
-# ======================================================
-@router.get("/{email}")
-def get_prediction_history(email: str):
-    """
-    Return all predictions of a user
-    """
+    filter_query = {"email": email}
+
+    # 🔥 TIME FILTER
+    if range != "all":
+        if range == "1h":
+            time_limit = now - timedelta(hours=1)
+        elif range == "24h":
+            time_limit = now - timedelta(hours=24)
+        elif range == "7d":
+            time_limit = now - timedelta(days=7)
+        elif range == "4w":
+            time_limit = now - timedelta(weeks=4)
+        else:
+            time_limit = None
+
+        if time_limit:
+            filter_query["timestamp"] = {"$gte": time_limit}
 
     history = list(
-        predictions_collection.find(
-            {"email": email},   # FIXED (not username)
-            {"_id": 0}
-        )
+        predictions_collection.find(filter_query, {"_id": 0})
+        .sort("timestamp", -1)
     )
 
     return {"history": history}
+
+# ======================================================
+# ❌ DELETE HISTORY ITEM (RANGE OR INDIVIDUAL)
+# ======================================================
+from typing import List, Optional
+from fastapi import Query
+
+@router.delete("")
+def delete_history(
+    email: str = Query(...),
+    range: Optional[str] = Query(None),
+    timestamps: Optional[List[str]] = Query(None),
+):
+    filter_query = {"email": email}
+
+    # ✅ PRIORITY 1 → DELETE SELECTED ITEMS ONLY
+    if timestamps and len(timestamps) > 0:
+        ts_list = [datetime.fromisoformat(ts) for ts in timestamps]
+
+        filter_query["timestamp"] = {"$in": ts_list}
+
+        result = predictions_collection.delete_many(filter_query)
+
+        return {
+            "message": "Selected items deleted",
+            "count": result.deleted_count
+        }
+
+    # ✅ PRIORITY 2 → RANGE DELETE
+    if range:
+        now = datetime.now(timezone.utc)
+
+        if range == "1h":
+            time_limit = now - timedelta(hours=1)
+        elif range == "24h":
+            time_limit = now - timedelta(hours=24)
+        elif range == "7d":
+            time_limit = now - timedelta(days=7)
+        elif range == "4w":
+            time_limit = now - timedelta(weeks=4)
+        elif range == "all":
+            result = predictions_collection.delete_many({"email": email})
+            return {"message": "All deleted", "count": result.deleted_count}
+        else:
+            return {"message": "Invalid range", "count": 0}
+
+        filter_query["timestamp"] = {"$gte": time_limit}
+
+        result = predictions_collection.delete_many(filter_query)
+
+        return {
+            "message": "Range deleted",
+            "count": result.deleted_count
+        }
+
+    return {"message": "Nothing deleted", "count": 0}

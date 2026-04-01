@@ -1,13 +1,11 @@
 """
-Prediction Service (Professional Version)
------------------------------------------
-Responsibilities:
-✔ Load model only once
-✔ Validate input safely
-✔ Run ML inference
-✔ Return top 3 crops with confidence
-✔ Log activity for debugging
-✔ Never crash server
+Prediction Service (Final Clean + Production Version)
+----------------------------------------------------
+✔ Safe input validation
+✔ Case normalization
+✔ Top 3 predictions
+✔ Confidence %
+✔ Stable (never crashes)
 """
 
 import joblib
@@ -17,17 +15,15 @@ import logging
 
 
 # ==================================================
-# Logging setup
+# Logging
 # ==================================================
-
-logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 # ==================================================
-# Path resolution
+# Paths
 # ==================================================
-
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
@@ -39,31 +35,26 @@ if not os.path.exists(MODEL_PATH):
 
 
 # ==================================================
-# Load model ONCE (important for performance)
+# Load Model ONCE
 # ==================================================
-
 logger.info("Loading ML model...")
 model = joblib.load(MODEL_PATH)
 logger.info("Model loaded successfully")
 
 
 # ==================================================
-# Validation helper
+# Required fields
 # ==================================================
-
 REQUIRED_FIELDS = [
     "N", "P", "K",
     "temperature", "humidity", "ph", "rainfall"
 ]
 
 
+# ==================================================
+# Validation
+# ==================================================
 def validate_input(data: dict):
-    """
-    Ensures:
-    ✔ all fields exist
-    ✔ numeric values only
-    """
-
     for field in REQUIRED_FIELDS:
         if field not in data:
             raise ValueError(f"{field} is missing")
@@ -76,24 +67,24 @@ def validate_input(data: dict):
 
 
 # ==================================================
-# Main prediction function
+# Normalize crop name (VERY IMPORTANT 🔥)
 # ==================================================
+def normalize_crop_name(name: str):
+    """
+    Convert:
+    muskmelon → Muskmelon
+    rice → Rice
+    """
+    return name.strip().capitalize()
 
+
+# ==================================================
+# Prediction Function
+# ==================================================
 def predict_crop(data: dict):
-    """
-    Parameters:
-        data (dict)
-
-    Returns:
-        {
-            predicted_crop,
-            confidence,
-            top_3
-        }
-    """
 
     try:
-        logger.info("Prediction requested")
+        logger.info("Prediction started")
 
         # ------------------------
         # Validate input
@@ -101,7 +92,7 @@ def predict_crop(data: dict):
         validate_input(data)
 
         # ------------------------
-        # Create dataframe
+        # DataFrame
         # ------------------------
         features = pd.DataFrame([{
             "N": data["N"],
@@ -122,18 +113,30 @@ def predict_crop(data: dict):
         crop_probs = list(zip(crops, probs))
         crop_probs.sort(key=lambda x: x[1], reverse=True)
 
-        top_3 = [
-            {"crop": crop, "probability": round(prob * 100, 2)}
-            for crop, prob in crop_probs[:3]
-        ]
+        # ------------------------
+        # Top 3
+        # ------------------------
+        top_3 = []
+        for crop, prob in crop_probs[:3]:
+            top_3.append({
+                "crop": normalize_crop_name(crop),   # ✅ FIXED
+                "probability": round(prob * 100, 2)
+            })
+
+        # ------------------------
+        # Final Result
+        # ------------------------
+        best_crop = normalize_crop_name(crop_probs[0][0])
+        confidence_raw = max(probs)
 
         result = {
-            "predicted_crop": top_3[0]["crop"],
-            "confidence": round(max(probs), 4),
+            "predicted_crop": best_crop,
+            "confidence": round(confidence_raw, 4),
+            "confidence_percent": round(confidence_raw * 100, 2),  # ✅ NEW
             "top_3": top_3
         }
 
-        logger.info(f"Prediction success → {result['predicted_crop']}")
+        logger.info(f"Prediction success → {best_crop}")
 
         return result
 

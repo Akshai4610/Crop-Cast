@@ -1,45 +1,90 @@
-/*
-  PURPOSE:
-  - Acts as a container for prediction result UI
-  - Keeps right-side layout clean
-*/
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
-const PredictionPanel = ({ crops, confidence, top3, loading }) => {
-  // Loading state
+import PredictionChart from "./PredictionChart";
+import { explainCrop } from "../../../utils/cropExplain";
+import { getWeatherHint } from "../../../utils/weatherHint";
+import { getCropEmoji } from "../../../utils/croeX";
+
+import { checkPremium, getWeather } from "../../../services/api";
+
+const PredictionPanel = ({ crops, confidence, top3, loading, inputData }) => {
+  const [isPremium, setIsPremium] = useState(false);
+  const [weather, setWeather] = useState(null);
+
+  const crop = crops?.[0];
+  const percent = Math.round(confidence * 100);
+
+  useEffect(() => {
+    checkPremium().then(setIsPremium);
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const data = await getWeather(
+          pos.coords.latitude,
+          pos.coords.longitude
+        );
+        setWeather(data);
+      } catch {}
+    });
+  }, []);
+
   if (loading) return <div className="glass-card">Predicting...</div>;
-
-  // No prediction yet
-  if (!crops || crops.length === 0)
-    return <div className="glass-card">Prediction appears here</div>;
-
-  // Take first predicted crop
-  const crop = crops[0];
-
-  const percent = (confidence * 100).toFixed(2);
+  if (!crop) return <div className="glass-card">Prediction appears here</div>;
 
   return (
-    <div className="glass-card space-y-4">
-      <h2 className="text-xl text-emerald-300">🌱 {crop}</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-card space-y-4"
+    >
+      {/* 🌱 MAIN RESULT */}
+      <h2 className="text-2xl text-emerald-300 font-bold flex items-center gap-2">
+        {isPremium && <span>{getCropEmoji(crop)}</span>}
+        {crop}
+      </h2>
 
-      <p>
-        <b>Confidence:</b> {percent}%
-      </p>
-      <div className="h-2 bg-white/20 rounded">
-        <div
-          className="h-2 bg-emerald-400 rounded"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-
+      {/* CONFIDENCE */}
       <div>
-        <h4 className="font-semibold">Top 3 Crop Predictions</h4>
-        {top3.map((item, i) => (
-          <div key={i} className="text-sm">
-            {item.crop} — {item.probability}%
-          </div>
-        ))}
+        <p className="text-sm">{percent}% Confidence</p>
+
+        <div className="h-2 bg-white/20 rounded mt-1">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${percent}%` }}
+            className="h-2 bg-emerald-400 rounded"
+          />
+        </div>
       </div>
-    </div>
+
+      {/* 🌦 WEATHER */}
+      {isPremium && (
+        <p className="text-xs text-cyan-300">
+          {getWeatherHint(weather, crop)}
+        </p>
+      )}
+
+      {/* 🧠 EXPLANATION */}
+      {isPremium && (
+        <div className="text-sm text-white/80">
+          {explainCrop(inputData, crop)}
+        </div>
+      )}
+
+      {/* 📊 CHART */}
+      {isPremium && <PredictionChart top3={top3} />}
+
+      {/* FALLBACK */}
+      {!isPremium && (
+        <div>
+          {top3?.map((item, i) => (
+            <div key={i} className="text-sm">
+              {item.crop} — {item.probability}%
+            </div>
+          ))}
+        </div>
+      )}
+    </motion.div>
   );
 };
 

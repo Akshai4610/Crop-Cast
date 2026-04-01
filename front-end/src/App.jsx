@@ -22,6 +22,7 @@ import UserLayout from "./layouts/UserLayout";
 import DashboardPage from "./pages/user/DashBoardPage";
 import ProfilePage from "./pages/user/ProfilePage";
 import NewsPage from "./pages/user/NewsPage";
+import HistoryPage from "./pages/user/HistoryPage";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
         <Route path="/user" element={<UserLayout />}>
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="history" element={<HistoryPage />} />
           <Route path="news" element={<NewsPage />} />
 
           {/* Default /user -> redirect to /user/dashboard (simple fallback) */}

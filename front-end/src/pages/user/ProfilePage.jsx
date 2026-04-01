@@ -66,7 +66,12 @@ const ProfilePage = () => {
             </button>
           </div>
         ) : (
-          <ProfileDetails profile={profile} onEdit={() => setOpenModal(true)} />
+          <div className="mt-8">
+            <ProfileDetails
+              profile={profile}
+              onEdit={() => setOpenModal(true)}
+            />
+          </div>
         )}
 
         {openModal && (
