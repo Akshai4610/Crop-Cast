@@ -36,9 +36,12 @@ def get_users(page: int = 1, limit: int = 10, search: str = "", sort: str = ""):
     for u in users:
         user_list.append({
             "id": str(u["_id"]),
-            "fullname": u["fullname"],
-            "email": u["email"],
-            "blocked": u.get("blocked", False)
+            "fullname": u.get("fullname", ""),
+            "email": u.get("email", ""),
+            "blocked": u.get("blocked", False),
+            "last_seen": u.get("last_seen"),
+            "profile_pic": u.get("profile_pic", ""),
+            "location": u.get("location", "")
         })
     total_users = users_collection.count_documents({})
     blocked_users = users_collection.count_documents({"blocked": True})

@@ -77,6 +77,12 @@ const LoginPage = () => {
         return;
       }
 
+      // 🚫 Banning
+      if (res.status === 403) {
+        setError("🚫 Your account has been banned by admin");
+        return;
+      }
+
       // ❌ Other server errors
       if (!res.ok) {
         setError(data?.detail || "Login failed");
@@ -160,7 +166,6 @@ const LoginPage = () => {
                 {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
               </span>
             </div>
-
 
             {/* ============================
                 🚀 LOGIN BUTTON

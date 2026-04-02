@@ -43,6 +43,9 @@ export const loginUser = async (data) => {
     return res.data;
 
   } catch (error) {
+    if (error.response?.status === 403) {
+      throw new Error("User is banned");
+    }
     throw error;
   }
 };
@@ -52,12 +55,23 @@ export const loginUser = async (data) => {
 // ======================
 
 export const getProfile = async (email) => {
-  const res = await API.get(`/auth/profile/${email}`);
-  return res.data;
+  try {
+    // ❌ OLD (WRONG)
+    // const res = await API.get(`/auth/profile/${email}`);
+
+    // ✅ NEW (FIXED)
+    const res = await API.get(`/profile/${email}`);
+
+    return res.data;
+
+  } catch (err) {
+    console.error("❌ Profile load failed", err.response?.data || err.message);
+    return null;
+  }
 };
 
 export const updateProfile = async (email, data) => {
-  const res = await API.put(`/auth/profile/${email}`, data);
+  const res = await API.post(`/profile/${email}`, data); // ✅ POST not PUT
   return res.data;
 };
 

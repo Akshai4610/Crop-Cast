@@ -10,19 +10,19 @@ import UserDetailsModal from "./UserDetailsModal";
 export default function UserTable({ users, page, setPage, total, refresh }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [viewUser, setViewUser] = useState(null);
+
+  const getUserId = (user) => user._id || user.id;
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
 
-    await deleteUser(deleteTarget.id);
-
+    await deleteUser(getUserId(deleteTarget));
     setDeleteTarget(null);
-
     refresh();
   };
 
-  const handleBlock = async (id) => {
-    await blockUser(id);
-
+  const handleBlock = async (user) => {
+    await blockUser(getUserId(user));
     refresh();
   };
 
@@ -39,54 +39,66 @@ export default function UserTable({ users, page, setPage, total, refresh }) {
         </thead>
 
         <tbody>
-          {users.map((user) => (
-            <tr
-              key={user.id}
-              className="border-b border-gray-900 hover:bg-gray-900"
-            >
-              <td className="py-4 flex items-center gap-3">
-                <img
-                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.fullname}`}
-                  className="w-9 h-9 rounded-full"
-                />
+          {users.map((user) => {
+            const userId = getUserId(user);
 
-                {user.fullname}
-              </td>
+            return (
+              <tr
+                key={userId}
+                className="border-b border-gray-900 hover:bg-gray-900"
+              >
+                <td className="py-4 flex items-center gap-3">
+                  {/* ✅ PROFILE IMAGE FIX */}
+                  <img
+                    src={
+                      user.profile_pic && user.profile_pic !== ""
+                        ? user.profile_pic
+                        : `https://api.dicebear.com/7.x/initials/svg?seed=${user.fullname}`
+                    }
+                    onError={(e) => {
+                      e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${user.fullname}`;
+                    }}
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
 
-              <td>{user.email}</td>
+                  {user.fullname}
+                </td>
 
-              <td>
-                {user.blocked ? (
-                  <span className="text-red-400">Blocked</span>
-                ) : (
-                  <span className="text-green-400">Active</span>
-                )}
-              </td>
+                <td>{user.email}</td>
 
-              <td className="flex justify-end gap-4">
-                <button
-                  onClick={() => setViewUser(user)}
-                  className="text-indigo-400"
-                >
-                  <Eye size={18} />
-                </button>
+                <td>
+                  {user.blocked ? (
+                    <span className="text-red-400">Blocked</span>
+                  ) : (
+                    <span className="text-green-400">Active</span>
+                  )}
+                </td>
 
-                <button
-                  onClick={() => handleBlock(user.id)}
-                  className="text-yellow-400"
-                >
-                  <Ban size={18} />
-                </button>
+                <td className="flex justify-end gap-4">
+                  <button
+                    onClick={() => setViewUser(user)}
+                    className="text-indigo-400 hover:scale-110 transition"
+                  >
+                    <Eye size={18} />
+                  </button>
 
-                <button
-                  onClick={() => setDeleteTarget(user)}
-                  className="text-red-400"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </td>
-            </tr>
-          ))}
+                  <button
+                    onClick={() => handleBlock(user)}
+                    className="text-yellow-400 hover:scale-110 transition"
+                  >
+                    <Ban size={18} />
+                  </button>
+
+                  <button
+                    onClick={() => setDeleteTarget(user)}
+                    className="text-red-400 hover:scale-110 transition"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
