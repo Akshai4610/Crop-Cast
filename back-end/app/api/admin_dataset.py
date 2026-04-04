@@ -1,31 +1,20 @@
-# ==========================================================
-# Admin Dataset Management (Production Architecture)
-# ==========================================================
-
 import os
 import joblib
 import shutil
 import pandas as pd
+import time  # ✅ REQUIRED
 
 from datetime import datetime
-from bson import ObjectId
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-from app.database.mongodb import db
-
 router = APIRouter(prefix="/admin/dataset", tags=["Admin Dataset"])
 
-# ==========================================================
-# 📁 PATH CONFIGURATION
-# ==========================================================
-
+# ================= PATH =================
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATASET_DIR = os.path.join(BASE_DIR, "dataset")
-
-os.makedirs(DATASET_DIR, exist_ok=True)
 
 ORIGINAL_CSV = os.path.join(DATASET_DIR, "crop_data.csv")
 ADMIN_CSV = os.path.join(DATASET_DIR, "admin_dataset.csv")
@@ -33,267 +22,234 @@ ADMIN_CSV = os.path.join(DATASET_DIR, "admin_dataset.csv")
 MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
 BACKUP_PATH = os.path.join(BASE_DIR, "model_backup.pkl")
 
-# ==========================================================
-# 📊 GLOBAL TRAINING STATE (In-Memory Tracker)
-# ==========================================================
+COLUMNS = ["N","P","K","temperature","humidity","ph","rainfall","label"]
+NUMERIC = ["N","P","K","temperature","humidity","ph","rainfall"]
 
+# ================= STATUS =================
 training_status = {
-    "status": "Idle",            # Idle | Training | Completed | Failed
+    "status": "Idle",
     "progress": 0,
     "accuracy": 0,
     "last_trained": None,
-    "total_models_trained": 0,
     "dataset_changed": False
 }
 
-NUMERIC_FIELDS = ["N", "P", "K", "temperature", "humidity", "ph", "rainfall"]
-
-
-# ==========================================================
-# 🔎 VALIDATION
-# ==========================================================
-
-def validate_row(row: dict):
-    required = NUMERIC_FIELDS + ["label"]
-
-    for field in required:
-        if field not in row or row[field] in ["", None]:
-            raise HTTPException(status_code=400, detail=f"{field} is required")
+# ================= CSV SAFE =================
+def read_csv_safe(path):
+    if not os.path.exists(path):
+        return pd.DataFrame(columns=COLUMNS)
 
     try:
-        for field in NUMERIC_FIELDS:
-            row[field] = float(row[field])
+        df = pd.read_csv(path, on_bad_lines="skip")
+        df = df.reindex(columns=COLUMNS)
+        return df.dropna()
     except:
-        raise HTTPException(status_code=400, detail="Numeric values invalid")
+        return pd.DataFrame(columns=COLUMNS)
 
+# ================= WRITE CSV =================
+def write_csv(df):
+    for col in NUMERIC:
+        df[col] = df[col].apply(
+            lambda x: int(float(x)) if float(x).is_integer() else float(x)
+        )
+
+    # ✅ FIX: remove .0 issue completely
+    for col in NUMERIC:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        if (df[col] % 1 == 0).all():
+            df[col] = df[col].astype("Int64")
+
+    df = df[COLUMNS]
+    df.to_csv(ADMIN_CSV, index=False)
+
+# ================= VALIDATION =================
+def validate(row):
+    for col in COLUMNS:
+        if col not in row or row[col] in ["", None]:
+            raise HTTPException(400, f"{col} required")
+
+    for col in NUMERIC:
+        val = float(row[col])
+        row[col] = int(val) if val.is_integer() else val
+
+    row["label"] = str(row["label"]).strip().lower()
     return row
 
+# ================= DUPLICATE =================
+def is_duplicate(row, ignore_index=None):
+    df = pd.concat([
+        read_csv_safe(ORIGINAL_CSV),
+        read_csv_safe(ADMIN_CSV)
+    ], ignore_index=True)
 
-# ==========================================================
-# 🔁 DUPLICATE CHECK
-# ==========================================================
+    if ignore_index is not None and ignore_index < len(df):
+        df = df.drop(ignore_index)
 
-def is_duplicate(row, ignore_id=None):
+    match = df[
+        (df["N"] == row["N"]) &
+        (df["P"] == row["P"]) &
+        (df["K"] == row["K"]) &
+        (df["temperature"] == row["temperature"]) &
+        (df["humidity"] == row["humidity"]) &
+        (df["ph"] == row["ph"]) &
+        (df["rainfall"] == row["rainfall"])
+    ]
 
-    query = row.copy()
+    return not match.empty
 
-    if ignore_id:
-        query["_id"] = {"$ne": ObjectId(ignore_id)}
+# ================= APPEND =================
+def append_csv(row):
+    df = read_csv_safe(ADMIN_CSV)
+    df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
+    write_csv(df)
 
-    # Mongo Check
-    if db.dataset.find_one(query):
-        return True
-
-    # CSV Check
-    for path in [ORIGINAL_CSV, ADMIN_CSV]:
-        if not os.path.exists(path):
-            continue
-
-        df = pd.read_csv(path)
-
-        match = df[
-            (df["N"] == row["N"]) &
-            (df["P"] == row["P"]) &
-            (df["K"] == row["K"]) &
-            (df["temperature"] == row["temperature"]) &
-            (df["humidity"] == row["humidity"]) &
-            (df["ph"] == row["ph"]) &
-            (df["rainfall"] == row["rainfall"]) &
-            (df["label"] == row["label"])
-        ]
-
-        if not match.empty:
-            return True
-
-    return False
-
-
-# ==========================================================
-# 🧠 BACKGROUND TRAINING ENGINE
-# ==========================================================
-
+# ================= TRAIN =================
 def run_training():
-
     global training_status
 
     try:
-        training_status["dataset_changed"] = False
-        training_status["last_trained"] = datetime.now()
-        training_status["total_models_trained"] += 1
-        training_status["status"] = "Training"
+        # 🔥 RESET PROGRESS
+        training_status.update({
+            "status": "Training",
+            "progress": 0
+        })
+
+        # ================= STEP 1 =================
+        time.sleep(0.5)
         training_status["progress"] = 10
 
-        df1 = pd.read_csv(ORIGINAL_CSV)
-        df2 = pd.read_csv(ADMIN_CSV) if os.path.exists(ADMIN_CSV) else pd.DataFrame()
-
-        df = pd.concat([df1, df2], ignore_index=True)
+        df = pd.concat([
+            read_csv_safe(ORIGINAL_CSV),
+            read_csv_safe(ADMIN_CSV)
+        ], ignore_index=True).dropna()
 
         if df.empty:
-            raise Exception("No data to train")
+            raise Exception("No data")
+
+        # ================= STEP 2 =================
+        time.sleep(0.5)
+        training_status["progress"] = 30
 
         X = df.drop("label", axis=1)
         y = df["label"]
 
-        training_status["progress"] = 40
+        # ================= STEP 3 =================
+        time.sleep(0.5)
+        training_status["progress"] = 55
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
+            X, y, test_size=0.2
         )
+
+        # ================= STEP 4 =================
+        time.sleep(0.5)
+        training_status["progress"] = 75
 
         model = RandomForestClassifier()
         model.fit(X_train, y_train)
 
-        training_status["progress"] = 70
+        # ================= STEP 5 =================
+        time.sleep(0.5)
+        training_status["progress"] = 90
 
-        y_pred = model.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred) * 100
+        acc = accuracy_score(y_test, model.predict(X_test)) * 100
 
-        # Backup old model
         if os.path.exists(MODEL_PATH):
             shutil.copy(MODEL_PATH, BACKUP_PATH)
 
         joblib.dump(model, MODEL_PATH)
 
-        # Update metadata
-        training_status["accuracy"] = round(accuracy, 2)
-        training_status["last_trained"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        training_status["total_models_trained"] += 1
-        training_status["progress"] = 100
-        training_status["status"] = "Completed"
+        # ================= FINAL =================
+        time.sleep(0.5)
+
+        training_status.update({
+            "status": "Completed",
+            "progress": 100,
+            "accuracy": round(acc, 2),
+            "last_trained": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "dataset_changed": False
+        })
 
     except Exception as e:
+        print("❌ Training Error:", str(e))
 
-        # Rollback if failure
         if os.path.exists(BACKUP_PATH):
             shutil.copy(BACKUP_PATH, MODEL_PATH)
 
-        training_status["status"] = "Failed"
-        training_status["progress"] = 0
+        training_status.update({
+            "status": "Failed",
+            "progress": 0
+        })
 
-
-# ==========================================================
-# ➕ ADD ROW (AUTO RETRAIN ENABLED)
-# ==========================================================
+# ================= CRUD =================
+@router.get("/")
+async def get_dataset():
+    df = read_csv_safe(ADMIN_CSV)
+    return {"data": df.to_dict(orient="records"), "total": len(df)}
 
 @router.post("/")
-async def add_row(row: dict, background_tasks: BackgroundTasks):
-
-    row = validate_row(row)
+async def add_row(row: dict, bg: BackgroundTasks):
+    row = validate(row)
 
     if is_duplicate(row):
-        raise HTTPException(status_code=400, detail="Row already exists")
+        raise HTTPException(400, "Duplicate dataset")
 
-    result = db.dataset.insert_one(row)
-    row["_id"] = str(result.inserted_id)
+    append_csv(row)
 
-    pd.DataFrame([row]).drop(columns=["_id"]).to_csv(
-        ADMIN_CSV,
-        mode="a",
-        header=not os.path.exists(ADMIN_CSV),
-        index=False
-    )
+    # 🔥 IMPORTANT: mark dataset changed BEFORE training
+    training_status["dataset_changed"] = True
 
-    # 🔥 AUTO RETRAIN
-    background_tasks.add_task(run_training)
+    return {"message": "Added"}
 
-    return {"message": "Row added & model retraining started"}
+@router.put("/{index}")
+async def update_row(index: int, row: dict, bg: BackgroundTasks):
+    df = read_csv_safe(ADMIN_CSV)
 
+    if index >= len(df):
+        raise HTTPException(404, "Not found")
 
-# ==========================================================
-# ✏ UPDATE ROW (FIXED 400 ERROR)
-# ==========================================================
+    row = validate(row)
 
-@router.put("/{id}")
-async def update_row(id: str, data: dict, background_tasks: BackgroundTasks):
+    if is_duplicate(row, index):
+        raise HTTPException(400, "Duplicate dataset")
 
-    existing = db.dataset.find_one({"_id": ObjectId(id)})
-    if not existing:
-        raise HTTPException(status_code=404, detail="Row not found")
+    df.iloc[index] = row
+    write_csv(df)
 
-    data = validate_row(data)
+    training_status["dataset_changed"] = True
 
-    if is_duplicate(data, ignore_id=id):
-        raise HTTPException(status_code=400, detail="Duplicate row exists")
+    return {"message": "Updated"}
 
-    db.dataset.update_one({"_id": ObjectId(id)}, {"$set": data})
+@router.delete("/{index}")
+async def delete_row(index: int, bg: BackgroundTasks):
+    df = read_csv_safe(ADMIN_CSV)
 
-    background_tasks.add_task(run_training)
+    if index >= len(df):
+        raise HTTPException(404, "Not found")
 
-    return {"message": "Updated & retraining started"}
+    df = df.drop(index).reset_index(drop=True)
+    write_csv(df)
 
+    training_status["dataset_changed"] = True
 
-# ==========================================================
-# ❌ DELETE ROW
-# ==========================================================
+    bg.add_task(run_training)
 
-@router.delete("/{id}")
-async def delete_row(id: str, background_tasks: BackgroundTasks):
+    return {"message": "Deleted"}
 
-    row = db.dataset.find_one({"_id": ObjectId(id)})
-    if not row:
-        raise HTTPException(status_code=404, detail="Row not found")
-
-    db.dataset.delete_one({"_id": ObjectId(id)})
-
-    background_tasks.add_task(run_training)
-
-    return {"message": "Deleted & retraining started"}
-
-# ==========================================================
-# 📋 GET DATASET (WITH PAGINATION)
-# ==========================================================
-
-@router.get("/")
-async def get_dataset(page: int = 1, limit: int = 50):
-
-    skip = (page - 1) * limit
-
-    total = db.dataset.count_documents({})
-
-    rows = list(
-        db.dataset.find()
-        .skip(skip)
-        .limit(limit)
-    )
-
-    for r in rows:
-        r["_id"] = str(r["_id"])
-
-    return {
-        "total": total,
-        "page": page,
-        "limit": limit,
-        "data": rows
-    }
-
-# ==========================================================
-# 📊 GET TRAINING STATUS (FOR FRONTEND POLLING)
-# ==========================================================
-
+# ================= TRAIN =================
 @router.get("/training-status")
-async def get_training_status():
+async def status():
     return training_status
-
-
-# ==========================================================
-# 🚀 MANUAL RETRAIN
-# ==========================================================
 
 @router.post("/retrain")
-async def retrain_model(background_tasks: BackgroundTasks):
-
+async def retrain(bg: BackgroundTasks):
     if training_status["status"] == "Training":
-        return {"message": "Training already running"}
+        return {"message": "Already running"}
 
-    background_tasks.add_task(run_training)
+    # 🔥 FORCE RETRAIN STATE
+    training_status["dataset_changed"] = True
 
-    return {"message": "Training started"}
+    bg.add_task(run_training)
 
-
-# ==========================================================
-# 📈 MODEL METRICS
-# ==========================================================
-
-@router.get("/model-metrics")
-async def model_metrics():
-    return training_status
+    return {"message": "Started"}

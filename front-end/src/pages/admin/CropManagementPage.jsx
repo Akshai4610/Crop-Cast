@@ -1,14 +1,3 @@
-/*
-====================================================
-Admin Crop Management Page (Optimized Version)
-- Crop CRUD
-- Dataset Manager
-- Centralized Training Status
-- Smart polling
-- Performance optimized
-====================================================
-*/
-
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -16,12 +5,14 @@ import {
   getDatasetRows,
   getTrainingStatus,
   getAllCrops,
+  addDatasetRow,
+  updateDatasetRow,
 } from "../../services/api";
 
 import CropForm from "../../components/admin/crop/CropForm";
 import CropTable from "../../components/admin/crop/CropTable";
 import DatasetStats from "../../components/admin/crop/DatasetStats";
-import DatasetForm from "../../components/admin/crop/DataSetForm";
+import DatasetForm from "../../components/admin/crop/DatasetForm";
 import DatasetTable from "../../components/admin/crop/DatasetTable";
 import AdminNavbar from "../../components/admin/navbar/AdminNavbar";
 import { ToastProvider } from "../../context/ToastContext";
@@ -29,129 +20,108 @@ import { ToastProvider } from "../../context/ToastContext";
 export default function CropManagementPage() {
   const location = useLocation();
 
-  // Memoized route check (prevents re-calculation)
   const isDataset = useMemo(
     () => location.pathname.includes("dataset"),
-    [location.pathname],
+    [location.pathname]
   );
 
-  /*
-  ====================================================
-  STATE
-  ====================================================
-  */
-
   const [rows, setRows] = useState([]);
-  const [training, setTraining] = useState(null);
+  const [training, setTraining] = useState({});
   const [crops, setCrops] = useState([]);
   const [editData, setEditData] = useState(null);
 
-  /*
-  ====================================================
-  DATASET LOADER (memoized to prevent recreation)
-  ====================================================
-  */
+  // ✅ ONLY THIS FOR DATASET EDIT
+  const [editingRow, setEditingRow] = useState(null);
+
+  // ================= LOAD DATASET =================
   const loadDataset = useCallback(async () => {
-    try {
-      const res = await getDatasetRows({ page: 1, limit: 500 });
-      setRows(res.data);
-    } catch (err) {
-      console.error("Dataset load failed", err);
-    }
+    const res = await getDatasetRows({ page: 1, limit: 500 });
+    setRows(res.data || []);
   }, []);
 
-  /*
-  ====================================================
-  TRAINING STATUS LOADER
-  ====================================================
-  */
+  // ================= TRAINING =================
   const loadTrainingStatus = useCallback(async () => {
-    try {
-      const res = await getTrainingStatus();
-      setTraining(res);
-    } catch (err) {
-      console.error("Training status load failed");
-    }
+    const res = await getTrainingStatus();
+    setTraining(res || {});
   }, []);
 
-  /*
-  ====================================================
-  SMART POLLING
-  Only poll when training is active
-  ====================================================
-  */
   useEffect(() => {
     loadTrainingStatus();
+
+    const interval = setInterval(loadTrainingStatus, 1000);
+    return () => clearInterval(interval);
   }, [loadTrainingStatus]);
 
-  useEffect(() => {
-    if (training?.status === "Training") {
-      const interval = setInterval(() => {
-        loadTrainingStatus();
-      }, 3000);
-
-      return () => clearInterval(interval);
-    }
-  }, [training?.status, loadTrainingStatus]);
-
-  /*
-  ====================================================
-  LOAD DATASET WHEN PAGE ACTIVE
-  ====================================================
-  */
   useEffect(() => {
     if (isDataset) loadDataset();
   }, [isDataset, loadDataset]);
 
-  /*
-  ====================================================
-  LOAD CROPS
-  ====================================================
-  */
-  const loadCrops = useCallback(async () => {
-    try {
-      const data = await getAllCrops();
-      setCrops(data);
-    } catch (err) {
-      console.error("Crop load failed");
+  useEffect(() => {
+    if (training?.status === "Completed") {
+      setTimeout(() => {
+        loadTrainingStatus();
+      }, 800); // 👈 allow 100% to be visible
     }
+  }, [training?.status]);
+
+  // ================= CROPS =================
+  const loadCrops = useCallback(async () => {
+    const data = await getAllCrops();
+    setCrops(data);
   }, []);
 
   useEffect(() => {
     loadCrops();
   }, [loadCrops]);
 
-  /*
-  ====================================================
-  RENDER
-  ====================================================
-  */
   return (
     <ToastProvider>
       <div className="min-h-screen bg-gray-950 text-white">
         <AdminNavbar />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           {isDataset ? (
             <div className="space-y-8">
+
               <DatasetStats rows={rows} training={training} />
 
               <div className="grid xl:grid-cols-3 gap-8">
+
+                {/* ✅ ONLY ONE FORM */}
                 <div className="glass-card p-6">
-                  <DatasetForm refresh={loadDataset} />
+                  <DatasetForm
+                    initialData={editingRow}
+                    onCancel={() => setEditingRow(null)}
+                    onSave={async (data) => {
+                      if (editingRow) {
+                        await updateDatasetRow(editingRow.index, data);
+                      } else {
+                        await addDatasetRow(data);
+                      }
+
+                      setEditingRow(null);
+
+                      loadDataset();
+                      await loadTrainingStatus();
+                    }}
+                  />
                 </div>
 
+                {/* TABLE */}
                 <div className="xl:col-span-2 glass-card p-6">
                   <DatasetTable
                     rows={rows}
-                    refresh={loadDataset}
                     training={training}
+                    setEditingRow={setEditingRow}
+                    refresh={loadDataset}
                   />
                 </div>
+
               </div>
             </div>
           ) : (
             <div className="grid lg:grid-cols-3 gap-8">
+
               <div className="glass-card p-6">
                 <CropForm
                   refresh={loadCrops}
@@ -167,6 +137,7 @@ export default function CropManagementPage() {
                   setEditData={setEditData}
                 />
               </div>
+
             </div>
           )}
         </div>

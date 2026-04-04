@@ -17,7 +17,7 @@ app = FastAPI(
 # ======================================================
 load_dotenv()
 
-origins = os.getenv("CORS_ORIGINS", "").split(",")
+origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",")]
 
 app.add_middleware(
     CORSMiddleware,

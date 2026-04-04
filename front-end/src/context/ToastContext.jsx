@@ -1,13 +1,3 @@
-/*
-=====================================================
-GLOBAL TOAST CONTEXT
-✔ Single toast instance
-✔ Auto close
-✔ No duplication
-✔ Reusable everywhere
-=====================================================
-*/
-
 import { createContext, useContext, useState, useCallback } from "react";
 import Toast from "../components/common/Toast";
 
@@ -16,9 +6,12 @@ const ToastContext = createContext();
 export function ToastProvider({ children }) {
   const [toast, setToast] = useState(null);
 
-  // show toast globally
-  const showToast = useCallback((type, message) => {
-    setToast({ type, message });
+  const showToast = useCallback((type, message, extra = {}) => {
+    setToast({
+      type,
+      message,
+      ...extra, // progress, accuracy, crop etc
+    });
   }, []);
 
   const closeToast = () => setToast(null);
@@ -27,9 +20,11 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
 
-      {/* GLOBAL FIXED TOAST */}
       {toast && (
-        <Toast type={toast.type} message={toast.message} onClose={closeToast} />
+        <Toast
+          {...toast}
+          onClose={closeToast}
+        />
       )}
     </ToastContext.Provider>
   );

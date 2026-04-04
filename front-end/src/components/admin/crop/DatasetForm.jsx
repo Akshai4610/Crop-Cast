@@ -1,201 +1,173 @@
-/*
-====================================================
-DATASET FORM (ADMIN)
-✔ Clean UI
-✔ Backend duplicate validation
-✔ Toast notifications
-✔ Numeric conversion
-✔ Mobile responsive
-✔ Prevent double submit
-====================================================
-*/
-
-import { useState } from "react";
-import { addDatasetRow } from "../../../services/api";
+import { useEffect, useState, useMemo } from "react";
 import { useToast } from "../../../context/ToastContext";
 
-/*
-====================================================
-INITIAL FORM STATE
-====================================================
-*/
-
 const initialState = {
-  N: "",
-  P: "",
-  K: "",
-  temperature: "",
-  humidity: "",
-  ph: "",
-  rainfall: "",
+  N: "", P: "", K: "",
+  temperature: "", humidity: "",
+  ph: "", rainfall: "",
   label: "",
 };
 
-export default function DatasetForm({ refresh }) {
-
+export default function DatasetForm({ initialData, onSave, onCancel }) {
   const [row, setRow] = useState(initialState);
+  const [original, setOriginal] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const { showToast } = useToast();
 
-  /*
-  ====================================================
-  HANDLE INPUT CHANGE
-  ====================================================
-  */
+  // ================= LOAD EDIT DATA =================
+  useEffect(() => {
+    if (initialData) {
+      const { index, ...clean } = initialData; // remove index
+      setRow(clean);
+      setOriginal(clean);
+    } else {
+      setRow(initialState);
+      setOriginal(null);
+    }
+  }, [initialData]);
+
+  // ================= INPUT CHANGE =================
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setRow((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    // 🔒 Prevent invalid numeric input
+    if (name !== "label") {
+      if (value === "" || /^-?\d*\.?\d*$/.test(value)) {
+        setRow((prev) => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setRow((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  /*
-  ====================================================
-  SUBMIT FORM
-  ====================================================
-  */
+// ================= NORMALIZE =================
+const normalize = (obj) => {
+  const clean = {};
+
+  Object.keys(obj).forEach((k) => {
+    if (k === "label") {
+      clean[k] = String(obj[k]).trim().toLowerCase();
+    } else {
+      const num = Number(obj[k]);
+      clean[k] = Number.isNaN(num) ? "" : (Number.isInteger(num) ? num : num);
+    }
+  });
+
+  return clean;
+};
+
+// ================= EMPTY CHECK =================
+const isEmpty = useMemo(() => {
+  return Object.values(row).some((v) => v === "");
+}, [row]);
+
+// ================= SAME CHECK =================
+const isSame = useMemo(() => {
+  if (!original) return false;
+
+  return JSON.stringify(normalize(row)) === JSON.stringify(normalize(original));
+}, [row, original]);
+
+// ================= FINAL VALID =================
+const isValid = useMemo(() => {
+  // ADD MODE
+  if (!initialData) {
+    return !isEmpty;
+  }
+
+  // EDIT MODE
+  return !isEmpty && !isSame;
+}, [isEmpty, isSame, initialData]);
+
+  // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (loading) return;
-
-    /*
-    ===============================================
-    BASIC VALIDATION
-    ===============================================
-    */
-    if (Object.values(row).some((v) => v === "")) {
-      showToast("error", "All fields are required");
-      return;
-    }
-
-    /*
-    ===============================================
-    CONVERT NUMERIC FIELDS
-    ===============================================
-    */
-    const payload = {
-      ...row,
-      N: Number(row.N),
-      P: Number(row.P),
-      K: Number(row.K),
-      temperature: Number(row.temperature),
-      humidity: Number(row.humidity),
-      ph: Number(row.ph),
-      rainfall: Number(row.rainfall),
-      label: row.label.trim().toLowerCase(),
-    };
+    if (!isValid || loading) return;
 
     setLoading(true);
 
     try {
+      await onSave(row);
 
-      /*
-      ===============================================
-      API CALL
-      Backend checks duplicates in:
-      - crop_data.csv
-      - admin_dataset.csv
-      - MongoDB
-      ===============================================
-      */
-      const res = await addDatasetRow(payload);
+      showToast("success", initialData ? "Updated successfully" : "Added successfully");
 
-      showToast("success", res.message || "Dataset added successfully");
-
-      /*
-      ===============================================
-      RESET FORM
-      ===============================================
-      */
       setRow(initialState);
-
-      /*
-      ===============================================
-      REFRESH TABLE
-      ===============================================
-      */
-      if (refresh) refresh();
+      setOriginal(null);
+      onCancel?.();
 
     } catch (err) {
-
-      /*
-      ===============================================
-      SHOW BACKEND ERROR
-      ===============================================
-      */
-      const message =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "Failed to add dataset";
-
-      showToast("error", message);
+      showToast("error", err.message || "Something went wrong");
     }
 
     setLoading(false);
   };
 
+  // ================= UI =================
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-5"
-    >
-      {/* TITLE */}
+    <form onSubmit={handleSubmit} className="space-y-5">
+
       <h2 className="text-xl font-semibold text-white">
-        Add Training Data
+        {initialData ? "✏️ Edit Dataset" : "➕ Add Dataset"}
       </h2>
 
-      {/* INPUT GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
 
         {Object.keys(row).map((key) => (
-
           <input
             key={key}
             name={key}
             value={row[key]}
             onChange={handleChange}
             placeholder={key}
-            autoComplete="off"
-            className="
-              w-full
-              px-3 py-2
-              bg-gray-800
-              border border-gray-700
-              rounded-lg
-              text-white
-              text-sm
-              focus:ring-2 focus:ring-emerald-500
-              outline-none
-              transition
-            "
+            className="bg-gray-800 border border-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 p-2 rounded text-white outline-none transition"
           />
-
         ))}
 
       </div>
 
-      {/* SUBMIT BUTTON */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="
-          w-full
-          bg-emerald-600
-          hover:bg-emerald-700
-          transition
-          py-2.5
-          rounded-lg
-          font-semibold
-          disabled:opacity-50
-          disabled:cursor-not-allowed
-        "
-      >
-        {loading ? "Adding Dataset..." : "Add Dataset"}
-      </button>
+      {/* ================= ACTION BUTTONS ================= */}
+      <div className="flex gap-3">
+
+        <button
+          type="submit"
+          disabled={!isValid || loading}
+          className={`px-4 py-2 rounded transition ${
+            isValid
+              ? "bg-green-600 hover:bg-green-500"
+              : "bg-gray-700 cursor-not-allowed"
+          }`}
+        >
+          {loading
+            ? "Saving..."
+            : initialData
+            ? "Save Changes"
+            : "Add Dataset"}
+        </button>
+
+        {initialData && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded transition"
+          >
+            Cancel
+          </button>
+        )}
+
+      </div>
+
+      {/* ================= VALIDATION HINT ================= */}
+      {!isValid && (
+        <p className="text-sm text-gray-400">
+          {isEmpty
+            ? "⚠️ Fill all fields"
+            : isSame
+            ? "⚠️ No changes detected"
+            : ""}
+        </p>
+      )}
 
     </form>
   );

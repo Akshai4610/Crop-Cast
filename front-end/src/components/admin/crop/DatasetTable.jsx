@@ -1,358 +1,405 @@
-/*
-========================================================
-DATASET TABLE (ADMIN PANEL)
-✔ Stable Edit / Delete
-✔ Retrain detection
-✔ Responsive table
-✔ Pagination
-✔ Toast feedback
-✔ Clean architecture
-========================================================
-*/
+import { useEffect, useState, useRef, useMemo } from "react";
+import { retrainModel, deleteDatasetRow } from "../../../services/api";
 
-import { useState, useMemo, useEffect } from "react";
-import {
-  retrainModel,
-  deleteDatasetRow,
-  updateDatasetRow,
-} from "../../../services/api";
-
-import EditModal from "../../common/EditModal";
+import TrainingProgressBar from "../../common/TrainingProgressBar";
 import DeleteConfirmModal from "../../common/DeleteConfirmModal";
-import Toast from "../../common/Toast";
+import { useToast } from "../../../context/ToastContext";
+import { Pencil, Trash2, ArrowUpDown } from "lucide-react";
 
-export default function DatasetTable({ rows = [], refresh }) {
-  /* =====================================================
-  STATE
-  ===================================================== */
+/* ── columns ── */
+const COLS = [
+  { key: "N", label: "N" },
+  { key: "P", label: "P" },
+  { key: "K", label: "K" },
+  { key: "temperature", label: "Temp" },
+  { key: "humidity", label: "Hum" },
+  { key: "ph", label: "pH" },
+  { key: "rainfall", label: "Rain" },
+  { key: "label", label: "Crop" },
+];
+
+export default function DatasetTable({
+  rows,
+  refresh,
+  training,
+  setEditingRow,
+}) {
+  const [deleteRow, setDeleteRow] = useState(null);
+  const { showToast } = useToast();
+  const prevStatus = useRef(null);
 
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("table"); // "table" | "card"
+
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+
   const [page, setPage] = useState(1);
+  const perPage = 8;
 
-  const [editRow, setEditRow] = useState(null);
-  const [deleteRow, setDeleteRow] = useState(null);
-
-  const [datasetChanged, setDatasetChanged] = useState(false);
-  const [isTraining, setIsTraining] = useState(false);
-
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [toast, setToast] = useState(null);
-
-  const pageSize = 8;
-
-    /* ===================================================
-     Detect dataset change
-  =================================================== */
-
+  // ================= ✅ TOAST =================
   useEffect(() => {
-
-    if (rows.length > 0) {
-      setDatasetChanged(true);
+    if (prevStatus.current === "Training" && training?.status === "Completed") {
+      showToast("success", "✅ Retrain completed successfully");
     }
 
-  }, [rows]);
+    if (prevStatus.current === "Training" && training?.status === "Failed") {
+      showToast("error", "❌ Training failed");
+    }
 
-  /* =====================================================
-  SEARCH FILTER
-  ===================================================== */
+    prevStatus.current = training?.status;
+  }, [training]);
 
-  const filteredRows = useMemo(() => {
-    if (!search.trim()) return rows;
+  // ================= ✅ TRAIN =================
+  const handleTrain = async () => {
+    if (training?.status === "Training") return;
 
-    return rows.filter((row) =>
-      Object.values(row).join(" ").toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [rows, search]);
+    try {
+      await retrainModel();
+    } catch {
+      setLocalTraining(false);
+    }
+  };
 
-  /* =====================================================
-  SORT
-  ===================================================== */
+  // ================= ✅ BUTTON LOGIC =================
+  const isTraining = training?.status === "Training";
+  const hasModel = !!training?.last_trained;
+  const datasetChanged = !!training?.dataset_changed;
 
-  const sortedRows = useMemo(() => {
-    const sorted = [...filteredRows];
+  const isDisabled = isTraining || (hasModel && !datasetChanged);
 
-    sorted.sort((a, b) => {
-      const A = a.label?.toLowerCase() || "";
-      const B = b.label?.toLowerCase() || "";
+  const buttonText = (() => {
+    if (isTraining) return `Training ${training?.progress || 0}%`;
+    if (!hasModel) return "Train";
+    if (datasetChanged) return "Retrain";
+    return "Trained";
+  })();
 
-      return sortDirection === "asc" ? A.localeCompare(B) : B.localeCompare(A);
-    });
+  // ================= FILTER =================
+  const processedRows = useMemo(() => {
+    let data = [...rows];
 
-    return sorted;
-  }, [filteredRows, sortDirection]);
+    if (search) {
+      data = data.filter((r) =>
+        Object.values(r).some((v) =>
+          String(v).toLowerCase().includes(search.toLowerCase()),
+        ),
+      );
+    }
 
-  /* =====================================================
-  PAGINATION
-  ===================================================== */
+    if (filter !== "all") {
+      data = data.filter((r) => r.label === filter);
+    }
 
-  const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+    if (sortKey) {
+      data.sort((a, b) => {
+        const A = a[sortKey];
+        const B = b[sortKey];
 
-  const paginatedRows = sortedRows.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
+        if (typeof A === "number") {
+          return sortDir === "asc" ? A - B : B - A;
+        }
+
+        return sortDir === "asc"
+          ? String(A).localeCompare(String(B))
+          : String(B).localeCompare(String(A));
+      });
+    }
+
+    return data;
+  }, [rows, search, filter, sortKey, sortDir]);
+
+  // ================= PAGINATION =================
+  const totalPages = Math.ceil(processedRows.length / perPage);
+
+  const paginatedRows = processedRows.slice(
+    (page - 1) * perPage,
+    page * perPage,
   );
 
-  /* =====================================================
-  TRAIN MODEL
-  ===================================================== */
+  useEffect(() => setPage(1), [search, filter]);
 
-  const handleTrain = async () => {
-    if (!datasetChanged || isTraining) return;
-
-    try {
-      setIsTraining(true);
-
-      await retrainModel();
-
-      setDatasetChanged(false);
-
-      setToast({
-        type: "success",
-        message: "Model training completed",
-      });
-
-      await refresh?.();
-    } catch (err) {
-      setToast({
-        type: "error",
-        message: "Training failed",
-      });
-    } finally {
-      setIsTraining(false);
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
     }
   };
 
-  /* =====================================================
-  DELETE DATASET
-  ===================================================== */
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteRow) return;
-
+  // ================= ✅ DELETE FIX =================
+  const handleDelete = async () => {
     try {
-      await deleteDatasetRow(deleteRow._id);
+      const actualRow = processedRows[deleteRow.index];
+
+      const realIndex = rows.findIndex(
+        (r) => JSON.stringify(r) === JSON.stringify(actualRow),
+      );
+
+      await deleteDatasetRow(realIndex);
 
       setDeleteRow(null);
+      await refresh();
 
-      setDatasetChanged(true);
-
-      setToast({
-        type: "success",
-        message: "Dataset deleted",
-      });
-
-      await refresh?.();
+      showToast("success", "Deleted successfully");
     } catch {
-      setToast({
-        type: "error",
-        message: "Delete failed",
-      });
+      showToast("error", "Delete failed");
     }
   };
 
-  /* =====================================================
-  EDIT DATASET
-  ===================================================== */
+  // ✅ RESPONSIVE BREAKPOINT (CRITICAL FIX)
+  const [isCompact, setIsCompact] = useState(false);
 
-  const handleEditSave = async (updatedData) => {
-    try {
-      await updateDatasetRow(editRow._id, updatedData);
+  useEffect(() => {
+    const check = () => {
+      setIsCompact(window.innerWidth < 1100); // 🔥 key breakpoint for split screen
+    };
 
-      setEditRow(null);
-
-      setDatasetChanged(true);
-
-      setToast({
-        type: "success",
-        message: "Dataset updated",
-      });
-
-      await refresh?.();
-    } catch (err) {
-      setToast({
-        type: "error",
-        message: "Update failed",
-      });
-    }
-  };
-
-  /* =====================================================
-  UI
-  ===================================================== */
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   return (
-    <div className="w-full space-y-6">
-      {/* ================= TOP BAR ================= */}
+    <div className="space-y-5 w-full">
+      {/* ✅ FIXED RESPONSIVE CONTROLS */}
+      <div className="flex flex-wrap items-center gap-2 w-full">
+        <input
+          placeholder="Search dataset..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 min-w-[140px] px-3 py-2 text-sm rounded-lg bg-gray-900 border border-gray-700"
+        />
 
-      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-        {/* SEARCH + SORT */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
-            placeholder="Search dataset..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="px-4 py-2 w-full sm:w-64 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-emerald-500 outline-none"
-          />
-
-          <select
-            value={sortDirection}
-            onChange={(e) => setSortDirection(e.target.value)}
-            className="px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white"
-          >
-            <option value="asc">Label A → Z</option>
-            <option value="desc">Label Z → A</option>
-          </select>
-        </div>
-
-        {/* TRAIN BUTTON */}
-
-        <button
-          onClick={handleTrain}
-          disabled={!datasetChanged || isTraining}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition
-          
-          ${
-            isTraining
-              ? "bg-gray-600 cursor-not-allowed"
-              : datasetChanged
-                ? "bg-orange-600 hover:bg-orange-700"
-                : "bg-gray-700 cursor-not-allowed"
-          }
-          
-          `}
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="min-w-[120px] px-3 py-2 text-sm rounded-lg bg-gray-900 border border-gray-700"
         >
-          {isTraining
-            ? "Training..."
-            : datasetChanged
-              ? "Retrain Model"
-              : "Train Model"}
-        </button>
+          <option value="all">All</option>
+          {[...new Set(rows.map((r) => r.label))].map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex gap-2 items-center">
+          {/* VIEW TOGGLE */}
+          <div className="flex bg-gray-800 rounded-lg p-1 text-xs">
+            <button
+              onClick={() => setViewMode("table")}
+              className={`px-3 py-1 rounded ${
+                viewMode === "table" ? "bg-indigo-600" : ""
+              }`}
+            >
+              Table
+            </button>
+
+            <button
+              onClick={() => setViewMode("card")}
+              className={`px-3 py-1 rounded ${
+                viewMode === "card" ? "bg-indigo-600" : ""
+              }`}
+            >
+              Card
+            </button>
+          </div>
+
+          {/* TRAIN BUTTON */}
+          <button
+            onClick={handleTrain}
+            disabled={isDisabled}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap
+      ${
+        isDisabled
+          ? "bg-gray-700 cursor-not-allowed"
+          : "bg-indigo-600 hover:bg-indigo-500"
+      }`}
+          >
+            {buttonText}
+          </button>
+        </div>
       </div>
 
-      {/* ================= TABLE ================= */}
+      {/* PROGRESS */}
+      {isTraining && <TrainingProgressBar training={training} />}
 
-      <div className="w-full overflow-x-auto border border-gray-800 rounded-xl">
-        <table className="min-w-full text-sm text-center">
-          <thead className="bg-gray-900 text-gray-300">
-            <tr>
-              <th className="py-3 px-2">N</th>
-              <th className="px-2">P</th>
-              <th className="px-2">K</th>
-              <th className="px-2">Temp</th>
-              <th className="px-2">Humidity</th>
-              <th className="px-2">pH</th>
-              <th className="px-2">Rain</th>
-              <th className="px-2">Crop</th>
-              <th className="px-2">Actions</th>
-            </tr>
-          </thead>
+      {/* TABLE */}
+      {/* ================= RESPONSIVE VIEW ================= */}
 
-          <tbody className="bg-gray-950 text-gray-200">
-            {paginatedRows.map((row) => (
-              <tr
-                key={row._id}
-                className="border-t border-gray-800 hover:bg-gray-900 transition"
+      {viewMode === "card" || isCompact ? (
+        /* ✅ CARD VIEW (FIXES SPLIT SCREEN 100%) */
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {paginatedRows.map((r, i) => {
+            const globalIndex = (page - 1) * perPage + i;
+
+            return (
+              <div
+                key={globalIndex}
+                className="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-indigo-500 transition"
               >
-                <td className="py-2">{row.N}</td>
-                <td>{row.P}</td>
-                <td>{row.K}</td>
-                <td>{row.temperature}</td>
-                <td>{row.humidity}</td>
-                <td>{row.ph}</td>
-                <td>{row.rainfall}</td>
+                {/* TOP */}
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs text-gray-400">
+                    #{globalIndex + 1}
+                  </span>
 
-                <td className="text-emerald-400 font-semibold">{row.label}</td>
-
-                <td>
-                  <div className="flex justify-center gap-2">
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => setEditRow(row)}
-                      className="px-3 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700"
+                      onClick={() =>
+                        setEditingRow({ ...r, index: globalIndex })
+                      }
+                      className="text-blue-400"
                     >
-                      Edit
+                      <Pencil size={16} />
                     </button>
 
                     <button
-                      onClick={() => setDeleteRow(row)}
-                      className="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700"
+                      onClick={() =>
+                        setDeleteRow({
+                          index: globalIndex,
+                          label: r.label,
+                        })
+                      }
+                      className="text-red-400"
                     >
-                      Delete
+                      <Trash2 size={16} />
                     </button>
                   </div>
-                </td>
-              </tr>
-            ))}
+                </div>
 
-            {paginatedRows.length === 0 && (
-              <tr>
-                <td colSpan="9" className="py-6 text-gray-400">
-                  No dataset rows found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                {/* DATA */}
+                <div className="space-y-2 text-sm">
+                  {COLS.map((col) => (
+                    <div key={col.key} className="flex justify-between">
+                      <span className="text-gray-500">{col.label}</span>
+                      <span className="text-white font-medium truncate max-w-[120px]">
+                        {r[col.key]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* ✅ DESKTOP TABLE */
+        <div className="w-full border border-gray-800 rounded-xl overflow-hidden">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-sm">
+              {/* HEADER */}
+              <thead className="bg-gray-900 text-gray-300">
+                <tr>
+                  <th className="px-4 py-3 text-left w-[60px]">#</th>
 
-      {/* ================= PAGINATION ================= */}
+                  {COLS.map((col) => (
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                    >
+                      <div className="flex items-center gap-1">
+                        {col.label}
+                        <ArrowUpDown size={12} />
+                      </div>
+                    </th>
+                  ))}
 
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center">
+                  <th className="px-4 py-3 text-right w-[100px]">Actions</th>
+                </tr>
+              </thead>
+
+              {/* BODY */}
+              <tbody>
+                {paginatedRows.map((r, i) => {
+                  const globalIndex = (page - 1) * perPage + i;
+
+                  return (
+                    <tr
+                      key={globalIndex}
+                      className="border-t border-gray-800 hover:bg-gray-900/40"
+                    >
+                      <td className="px-4 py-3 text-gray-400">
+                        {globalIndex + 1}
+                      </td>
+
+                      {COLS.map((col) => (
+                        <td key={col.key} className="px-4 py-3">
+                          <div className="text-sm text-gray-200 truncate">
+                            {r[col.key]}
+                          </div>
+                        </td>
+                      ))}
+
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={() =>
+                              setEditingRow({ ...r, index: globalIndex })
+                            }
+                            className="text-blue-400"
+                          >
+                            <Pencil size={16} />
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              setDeleteRow({
+                                index: globalIndex,
+                                label: r.label,
+                              })
+                            }
+                            className="text-red-400"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* PAGINATION */}
+      <div className="flex flex-wrap justify-between items-center gap-2 text-xs text-gray-500">
+        <span>
+          Page {page} / {totalPages || 1}
+        </span>
+
+        <div className="flex gap-2">
           <button
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-            className="px-4 py-1 bg-gray-800 rounded disabled:opacity-40"
+            onClick={() => setPage((p) => Math.max(p - 1, 1))}
+            className="px-2 py-1 bg-gray-800 rounded"
           >
             Prev
           </button>
 
-          <span className="text-gray-400 text-sm">
-            {page} / {totalPages}
-          </span>
-
           <button
-            disabled={page === totalPages}
-            onClick={() => setPage((p) => p + 1)}
-            className="px-4 py-1 bg-gray-800 rounded disabled:opacity-40"
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+            className="px-2 py-1 bg-gray-800 rounded"
           >
             Next
           </button>
         </div>
-      )}
+      </div>
 
-      {/* ================= MODALS ================= */}
-
-      {editRow && (
-        <EditModal
-          isOpen={true}
-          data={editRow}
-          onClose={() => setEditRow(null)}
-          onSave={handleEditSave}
-        />
-      )}
-
+      {/* DELETE MODAL */}
       {deleteRow && (
         <DeleteConfirmModal
-          open={true}
-          title="Delete Dataset"
-          message="This dataset row will be permanently removed."
+          open
+          title="Delete Dataset Row"
+          message="This record will be permanently removed."
           itemName={deleteRow.label}
-          onConfirm={handleDeleteConfirm}
+          onConfirm={handleDelete}
           onCancel={() => setDeleteRow(null)}
-        />
-      )}
-
-      {/* ================= TOAST ================= */}
-
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
         />
       )}
     </div>
