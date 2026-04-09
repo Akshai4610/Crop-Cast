@@ -11,22 +11,22 @@ def get_license_map():
     db = {}
     for p in pairs:
         if ":" in p:
-            email, key = p.split(":")
-            db[email.strip()] = key.strip()
+            email, key = p.split(":", 1)
+            # 🔥 LOWERCASE for case-insensitive lookup
+            db[email.strip().lower()] = key.strip()
     return db
 
 
 @router.get("/check")
-def check_license(email: str, key: str):
-    print("EMAIL:", email)
-    print("KEY:", key)
+def check_license(email: str = "", key: str = ""):
+    # 🔥 LOWERCASE for case-insensitive lookup
+    email_clean = (email or "").strip().lower()
+    key_clean = (key or "").strip()
 
-    license_db = get_license_map()   # ✅ FIX
-    valid_key = license_db.get(email)
+    license_map = get_license_map()
+    valid_key = license_map.get(email_clean)
 
-    print("VALID KEY:", valid_key)
-
-    if valid_key and key == valid_key:
+    if valid_key and key_clean == valid_key:
         return {"premium": True}
 
     return {"premium": False}

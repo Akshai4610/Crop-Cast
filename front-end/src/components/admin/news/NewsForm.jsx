@@ -158,17 +158,68 @@ export default function NewsForm({ news, onClose, refresh }) {
   const [imageMode, setImageMode] = useState("upload");
   const [imageURL, setImageURL] = useState(news?.image || "");
   const [preview, setPreview] = useState(news?.image || "");
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  // 🖼️ IMAGE COMPRESSION UTILITY
+  const compressImage = (file) => {
+    return new Promise((resolve, reject) => {
+      // 🚨 1. Check hard 5MB limit before processing
+      if (file.size > 5 * 1024 * 1024) {
+        return reject("File too large! Max limit is 5MB.");
+      }
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // 🔥 Export as compressed JPEG (0.7 quality)
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(dataUrl);
+        };
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
 
   // IMAGE UPLOAD
-  const handleImageUpload = (file) => {
+  const handleImageUpload = async (file) => {
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result);
-      setImageURL(reader.result);
-    };
-    reader.readAsDataURL(file);
+    setIsCompressing(true);
+    try {
+      const compressedBase64 = await compressImage(file);
+      setPreview(compressedBase64);
+      setImageURL(compressedBase64);
+    } catch (err) {
+      alert(err);
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const handleImageURL = (url) => {
@@ -346,8 +397,14 @@ export default function NewsForm({ news, onClose, refresh }) {
                     <div className="relative">
                       <img
                         src={preview}
-                        className="rounded-xl max-h-48 object-cover w-full"
+                        className={`rounded-xl max-h-48 object-cover w-full ${isCompressing ? 'opacity-50 grayscale' : ''}`}
                       />
+                      
+                      {isCompressing && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">Optimizing...</span>
+                        </div>
+                      )}
 
                       <button
                         type="button"

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 
 import { getUsers } from "../../services/api";
 
-import AdminNavbar from "../../components/admin/navbar/AdminNavbar";
+import Navbar from "../../components/common/Navbar";
 
 import UserStatsCards from "../../components/admin/users/UserStatsCards";
 import UserCharts from "../../components/admin/users/UserCharts";
@@ -41,7 +41,7 @@ export default function UserManagementPage() {
 
     <div className="min-h-screen bg-gray-950 text-white">
 
-      <AdminNavbar/>
+      <Navbar/>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
@@ -72,7 +72,7 @@ export default function UserManagementPage() {
 
           <div className="glass-card p-6">
 
-            <UserActivityTimeline users={users}/>
+            <UserActivityTimeline />
 
           </div>
 

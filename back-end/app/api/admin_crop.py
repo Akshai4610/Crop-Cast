@@ -7,9 +7,10 @@
 # DELETE crop (by ObjectId)
 from bson import ObjectId
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.database.mongodb import crop_collection
 from app.schemas.admin_crop_schema import CropCreate, CropUpdate
+from app.core.dependencies import admin_required
 
 router = APIRouter(prefix="/admin/crops", tags=["Admin Crop"])
 
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/admin/crops", tags=["Admin Crop"])
 # ================================
 # ADD crop
 # ================================
-@router.post("/")
+@router.post("/", dependencies=[Depends(admin_required)])
 def add_crop(crop: CropCreate):
 
     # prevent duplicate crop
@@ -33,7 +34,7 @@ def add_crop(crop: CropCreate):
 # ================================
 # GET all crops
 # ================================
-@router.get("/")
+@router.get("/", dependencies=[Depends(admin_required)])
 def get_all_crops():
 
     # convert cursor → list (SYNC)
@@ -49,7 +50,7 @@ def get_all_crops():
 # ================================
 # UPDATE crop
 # ================================
-@router.put("/{id}")
+@router.put("/{id}", dependencies=[Depends(admin_required)])
 def update_crop(id: str, crop: CropUpdate):
 
     try:
@@ -70,7 +71,7 @@ def update_crop(id: str, crop: CropUpdate):
 # ================================
 # DELETE crop
 # ================================
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(admin_required)])
 def delete_crop(id: str):
 
     """

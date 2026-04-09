@@ -1,6 +1,6 @@
 import {
   PieChart, Pie, Cell, Tooltip,
-  LineChart, Line, XAxis, YAxis, CartesianGrid
+  LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer
 } from "recharts";
 import { motion } from "framer-motion";
 
@@ -32,26 +32,30 @@ const HistoryAnalytics = ({ data }) => {
       {/* PIE */}
       <motion.div className="bg-slate-800 p-4 rounded-xl">
         <h3 className="mb-3">Crop Distribution</h3>
-        <PieChart width={300} height={250}>
-          <Pie data={pieData} dataKey="value">
-            {pieData.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip />
-        </PieChart>
+        <ResponsiveContainer width="100%" height={250} minWidth={0}>
+          <PieChart>
+            <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={80}>
+              {pieData.map((_, i) => (
+                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
       </motion.div>
 
       {/* LINE */}
       <motion.div className="bg-slate-800 p-4 rounded-xl">
         <h3 className="mb-3">Confidence Trend</h3>
-        <LineChart width={350} height={250} data={trend}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip />
-          <Line type="monotone" dataKey="confidence" stroke="#10b981" />
-        </LineChart>
+        <ResponsiveContainer width="100%" height={250} minWidth={0}>
+          <LineChart data={trend}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="confidence" stroke="#10b981" />
+          </LineChart>
+        </ResponsiveContainer>
       </motion.div>
     </div>
   );

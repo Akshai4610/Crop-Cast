@@ -31,6 +31,8 @@ const PredictionHistory = () => {
     cardBase: "bg-slate-800 rounded-xl p-4",
     getGlowStyle: () => ({}),
     pulseAnimation: {},
+    historyCardMotionProps: {},
+    historyBarProps: () => ({})
   });
 
   const [getEmoji, setGetEmoji] = useState(() => () => "🌱");
@@ -46,25 +48,30 @@ const PredictionHistory = () => {
         const premium = await checkPremium();
         setIsPremium(premium);
 
-        const glowModule = await import("../../../utils/cropGlow");
-        setGetGlow(() => glowModule.getCropGlow);
+        const mods = import.meta.glob('../../../utils/*.js');
 
-        try {
-          const emojiModule = await import("../../../utils/croeX");
-          setGetEmoji(() => emojiModule.getCropEmoji);
-        } catch {}
+        if (mods['../../../utils/cropGlow.js']) {
+          try { const m = await mods['../../../utils/cropGlow.js'](); if (m.getCropGlow) setGetGlow(() => m.getCropGlow); } catch(e){}
+        }
 
         if (premium) {
-          try {
-            const uiModule = await import("../../../utils/uiEngine");
-            setUI({
-              getGradientBorder: uiModule.getGradientBorder,
-              cardBase: uiModule.cardBase,
-              getGlowStyle: uiModule.getGlowStyle,
-              pulseAnimation: uiModule.pulseAnimation,
-            });
-          } catch {
-            console.warn("Premium UI missing → fallback");
+          if (mods['../../../utils/croeX.js']) {
+            try { const m = await mods['../../../utils/croeX.js'](); if (m.getCropEmoji) setGetEmoji(() => m.getCropEmoji); } catch(e){}
+          }
+          if (mods['../../../utils/uiEngine.js']) {
+            try {
+              const m = await mods['../../../utils/uiEngine.js']();
+              if (m.getGradientBorder) {
+                setUI({
+                  getGradientBorder: m.getGradientBorder,
+                  cardBase: m.cardBase,
+                  getGlowStyle: m.getGlowStyle,
+                  pulseAnimation: m.pulseAnimation,
+                  historyCardMotionProps: m.historyCardMotionProps || {},
+                  historyBarProps: m.historyBarProps || (() => ({}))
+                });
+              }
+            } catch(e) {}
           }
         }
       } catch (err) {
@@ -155,10 +162,7 @@ const fetchHistory = async () => {
           return (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -8, scale: 1.04 }}
-              transition={{ duration: 0.3 }}
+              {...(isPremium ? ui.historyCardMotionProps : {})}
               className="relative group"
             >
               {isPremium && (
@@ -187,9 +191,7 @@ const fetchHistory = async () => {
 
                 <div className="w-full h-2 bg-slate-700 rounded mt-3 mb-4 overflow-hidden">
                   <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percent}%` }}
-                    transition={{ duration: 1 }}
+                    {...(isPremium ? ui.historyBarProps(percent) : { style: { width: `${percent}%` } })}
                     className={`h-full bg-gradient-to-r ${glowData.border}`}
                   />
                 </div>

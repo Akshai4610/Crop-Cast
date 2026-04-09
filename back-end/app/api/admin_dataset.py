@@ -5,10 +5,11 @@ import pandas as pd
 import time  # ✅ REQUIRED
 
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from app.core.dependencies import admin_required
 
 router = APIRouter(prefix="/admin/dataset", tags=["Admin Dataset"])
 
@@ -183,12 +184,12 @@ def run_training():
         })
 
 # ================= CRUD =================
-@router.get("/")
+@router.get("/", dependencies=[Depends(admin_required)])
 async def get_dataset():
     df = read_csv_safe(ADMIN_CSV)
     return {"data": df.to_dict(orient="records"), "total": len(df)}
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(admin_required)])
 async def add_row(row: dict, bg: BackgroundTasks):
     row = validate(row)
 
@@ -202,7 +203,7 @@ async def add_row(row: dict, bg: BackgroundTasks):
 
     return {"message": "Added"}
 
-@router.put("/{index}")
+@router.put("/{index}", dependencies=[Depends(admin_required)])
 async def update_row(index: int, row: dict, bg: BackgroundTasks):
     df = read_csv_safe(ADMIN_CSV)
 
@@ -221,7 +222,7 @@ async def update_row(index: int, row: dict, bg: BackgroundTasks):
 
     return {"message": "Updated"}
 
-@router.delete("/{index}")
+@router.delete("/{index}", dependencies=[Depends(admin_required)])
 async def delete_row(index: int, bg: BackgroundTasks):
     df = read_csv_safe(ADMIN_CSV)
 
@@ -238,11 +239,11 @@ async def delete_row(index: int, bg: BackgroundTasks):
     return {"message": "Deleted"}
 
 # ================= TRAIN =================
-@router.get("/training-status")
+@router.get("/training-status", dependencies=[Depends(admin_required)])
 async def status():
     return training_status
 
-@router.post("/retrain")
+@router.post("/retrain", dependencies=[Depends(admin_required)])
 async def retrain(bg: BackgroundTasks):
     if training_status["status"] == "Training":
         return {"message": "Already running"}

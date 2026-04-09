@@ -14,6 +14,41 @@ const API = axios.create({
   },
 });
 
+// ==============================
+// 🔐 AUTO TOKEN ATTACH
+// ==============================
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+// ==============================
+// 🔐 GLOBAL ERROR HANDLER
+// ==============================
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.warn("🔐 Session expired. Clearing token...");
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("role");
+      
+      // Optional: Alert user
+      if (!window.location.pathname.includes("/login")) {
+        alert("Your session has expired. Please log in again.");
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ======================================================
 // 🔐 AUTH
 // ======================================================
@@ -32,7 +67,9 @@ export const loginUser = async (data) => {
   try {
     const res = await API.post("/auth/login", data);
 
-    // ✅ STORE USER
+    // 🔥 STORE TOKEN
+    localStorage.setItem("token", res.data.access_token);
+    localStorage.setItem("role", res.data.role);
     localStorage.setItem("username", res.data.email);
 
     // 🔥 ADD THIS (IMPORTANT)
@@ -47,6 +84,15 @@ export const loginUser = async (data) => {
       throw new Error("User is banned");
     }
     throw error;
+  }
+};
+
+export const logoutUser = async () => {
+  try {
+    const res = await API.post("/auth/logout");
+    return res.data;
+  } catch (err) {
+    console.error("Logout error:", err);
   }
 };
 
@@ -278,6 +324,12 @@ export const blockUser = async (id) => {
   return res.data;
 };
 
+// 📈 ADMIN STATS
+export const getRecentActivities = async () => {
+  const res = await API.get("/admin/stats/activities");
+  return res.data;
+};
+
 // ======================================================
 // 📰 NEWS (FIXED 🔥)
 // ======================================================
@@ -298,10 +350,7 @@ export const getNews = async (category = "") => {
 // ADD NEWS (✅ FIXED)
 export const addNews = async (formData) => {
   try {
-    // 🚨 REMOVE WRONG FIELD IF EXISTS
-    formData.delete("image");
-
-    const res = await API.post("/news/", formData, {
+    const res = await API.post("/news/admin", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -318,9 +367,7 @@ export const addNews = async (formData) => {
 // UPDATE NEWS (✅ FIXED)
 export const updateNews = async (id, formData) => {
   try {
-    formData.delete("image"); // 🚨 IMPORTANT
-
-    const res = await API.put(`/news/${id}`, formData, {
+    const res = await API.put(`/news/admin/${id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -336,7 +383,7 @@ export const updateNews = async (id, formData) => {
 
 // DELETE
 export const deleteNews = async (id) => {
-  return await API.delete(`/news/${id}`);
+  return await API.delete(`/news/admin/${id}`);
 };
 
 // ======================
@@ -344,10 +391,8 @@ export const deleteNews = async (id) => {
 // ======================
 export const likeNews = async (id) => {
   try {
-    const email = localStorage.getItem("username");
 
     const formData = new FormData();
-    formData.append("email", email);
 
     const res = await API.post(`/news/${id}/like`, formData, {
       headers: {
@@ -369,10 +414,8 @@ export const likeNews = async (id) => {
 // ======================
 export const dislikeNews = async (id) => {
   try {
-    const email = localStorage.getItem("username");
 
     const formData = new FormData();
-    formData.append("email", email);
 
     const res = await API.post(`/news/${id}/dislike`, formData, {
       headers: {
@@ -392,10 +435,8 @@ export const dislikeNews = async (id) => {
 // Comments
 // ======================
 export const addComment = async (id, text) => {
-  const email = localStorage.getItem("username");
 
   const formData = new FormData();
-  formData.append("email", email);
   formData.append("text", text);
 
   return await API.post(`/news/${id}/comments`, formData, {
@@ -410,17 +451,10 @@ export const getComments = async (id) => {
 
 export const deleteComment = async (id, text) => {
   try {
-    const email = localStorage.getItem("username");
-
     const res = await API.delete(`/news/${id}/comments`, {
-      data: {
-        email,
-        text,
-      },
+      data: { text },
     });
-
     return res.data;
-
   } catch (error) {
     console.error("Delete comment error:", error);
     throw error;

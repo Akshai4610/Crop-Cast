@@ -8,7 +8,7 @@ Admin → News Management Page
 
 import { useEffect, useState, useCallback } from "react";
 
-import AdminNavbar from "../../components/admin/navbar/AdminNavbar";
+import Navbar from "../../components/common/Navbar";
 
 import { getNews } from "../../services/api";
 
@@ -62,7 +62,7 @@ export default function NewsManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <AdminNavbar />
+      <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* 🔍 SEARCH + FILTER */}

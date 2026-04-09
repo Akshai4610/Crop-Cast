@@ -4,9 +4,10 @@ Admin Users API
 Manage registered users
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from app.database.mongodb import users_collection
+from app.core.dependencies import admin_required
 
 router = APIRouter(prefix="/admin/users", tags=["Admin Users"])
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/admin/users", tags=["Admin Users"])
 # Get all users
 # ==========================
 @router.get("/")
-def get_users(page: int = 1, limit: int = 10, search: str = "", sort: str = ""):
+def get_users(page: int = 1, limit: int = 10, search: str = "", sort: str = "", admin = Depends(admin_required)):
 
     query = {}
 
@@ -61,7 +62,7 @@ def get_users(page: int = 1, limit: int = 10, search: str = "", sort: str = ""):
 # ==========================
 # Delete user
 # ==========================
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", dependencies=[Depends(admin_required)])
 def delete_user(user_id: str):
 
     result = users_collection.delete_one({"_id": ObjectId(user_id)})
@@ -75,7 +76,7 @@ def delete_user(user_id: str):
 # ==========================
 # Block / Unblock user
 # ==========================
-@router.put("/block/{user_id}")
+@router.put("/block/{user_id}", dependencies=[Depends(admin_required)])
 def block_user(user_id: str):
 
     user = users_collection.find_one({"_id": ObjectId(user_id)})

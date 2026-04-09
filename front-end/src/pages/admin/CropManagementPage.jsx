@@ -14,7 +14,7 @@ import CropTable from "../../components/admin/crop/CropTable";
 import DatasetStats from "../../components/admin/crop/DatasetStats";
 import DatasetForm from "../../components/admin/crop/DatasetForm";
 import DatasetTable from "../../components/admin/crop/DatasetTable";
-import AdminNavbar from "../../components/admin/navbar/AdminNavbar";
+import Navbar from "../../components/common/Navbar";
 import { ToastProvider } from "../../context/ToastContext";
 
 export default function CropManagementPage() {
@@ -77,7 +77,7 @@ export default function CropManagementPage() {
   return (
     <ToastProvider>
       <div className="min-h-screen bg-gray-950 text-white">
-        <AdminNavbar />
+        <Navbar/>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           {isDataset ? (

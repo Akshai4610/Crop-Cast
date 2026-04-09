@@ -1,12 +1,28 @@
-import { LogIn, LogOut } from "lucide-react"
+import { useState, useEffect } from "react"
+import { LogIn, LogOut, Loader2 } from "lucide-react"
+import { getRecentActivities } from "../../../services/api"
 
-export default function UserActivityTimeline({ users }) {
+export default function UserActivityTimeline() {
+  const [activities, setActivities] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const activities = users.slice(0, 6).map((u) => ({
-    name: u.fullname,
-    action: Math.random() > 0.5 ? "login" : "logout",
-    time: "2 min ago",
-  }))
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const data = await getRecentActivities()
+        setActivities(data)
+      } catch (err) {
+        console.error("Failed to fetch activities", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchActivities()
+    
+    // Refresh every minute
+    const interval = setInterval(fetchActivities, 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
 
@@ -71,14 +87,21 @@ export default function UserActivityTimeline({ users }) {
               </p>
 
               <span className="text-xs text-gray-400">
-                {a.time}
+                {a.time_ago}
               </span>
-
             </div>
-
           </div>
-
         ))}
+
+        {!loading && activities.length === 0 && (
+          <p className="text-center text-gray-500 text-sm py-4">No recent activity</p>
+        )}
+
+        {loading && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="animate-spin text-emerald-400" />
+          </div>
+        )}
 
       </div>
 

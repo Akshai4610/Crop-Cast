@@ -1,7 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getCropGlow } from "../../utils/cropGlow";
-import { getGradientBorder } from "../../utils/uiEngine";
+
 
 /* ── type config ── */
 const TYPE_CONFIG = {
@@ -69,6 +68,20 @@ export default function Toast({
 }) {
   const audioRef = useRef(null);
   const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.info;
+  const [getCropGlow, setGetCropGlow] = useState(() => () => ({
+    glow: "rgba(52,211,153,0.15)",
+    border: "from-emerald-500 to-teal-400"
+  }));
+
+  useEffect(() => {
+    const loadGlow = async () => {
+       const mods = import.meta.glob('../../utils/*.js');
+       if (mods['../../utils/cropGlow.js']) {
+          try { const m = await mods['../../utils/cropGlow.js'](); if (m.getCropGlow) setGetCropGlow(() => m.getCropGlow); } catch(e){}
+       }
+    };
+    loadGlow();
+  }, []);
 
   /* ── 🔊 SOUND — logic unchanged ── */
   useEffect(() => {

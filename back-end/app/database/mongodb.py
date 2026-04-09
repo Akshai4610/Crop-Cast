@@ -32,12 +32,8 @@ except Exception as e:
 # Database
 # =========================================
 db = client["crop_cast"]
-
-
-# =========================================
-# Collections (exported globally)
-# =========================================
 crop_collection = db["crop_details"]
 users_collection = db["users"]
 news_collection = db["news"]
 predictions_collection = db["predictions"]
+activities_collection = db["activities"]  # 🔥 Added for tracking logins/logouts

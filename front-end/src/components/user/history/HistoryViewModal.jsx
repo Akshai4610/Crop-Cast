@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getCropDetails, checkPremium } from "../../../services/api";
-import { getCropEmoji } from "../../../utils/croeX";
+
 
 const normalizeCrop = (name) =>
   name?.toLowerCase().replace(/\s+/g, "").trim();
@@ -16,6 +16,8 @@ export default function HistoryViewModal({ data, onClose }) {
     cardBase: "bg-slate-800 rounded-xl p-5",
     getGlowStyle: () => ({}),
     pulseAnimation: {},
+    modalMotionProps: {},
+    historyBarProps: () => ({})
   });
 
   const [getGlow, setGetGlow] = useState(() => () => ({
@@ -23,6 +25,7 @@ export default function HistoryViewModal({ data, onClose }) {
     border: "from-emerald-400 to-cyan-400",
     intensity: 0.5,
   }));
+  const [getEmoji, setGetEmoji] = useState(() => () => "🌱");
 
   // 🔥 INIT
   useEffect(() => {
@@ -31,20 +34,32 @@ export default function HistoryViewModal({ data, onClose }) {
         const premium = await checkPremium();
         setIsPremium(premium);
 
-        const glowModule = await import("../../../utils/cropGlow");
-        setGetGlow(() => glowModule.getCropGlow);
+        const mods = import.meta.glob('../../../utils/*.js');
+
+        if (mods['../../../utils/cropGlow.js']) {
+          try { const m = await mods['../../../utils/cropGlow.js'](); if (m.getCropGlow) setGetGlow(() => m.getCropGlow); } catch(e){}
+        }
 
         if (premium) {
-          const uiModule = await import("../../../utils/uiEngine");
-
-          setUI({
-            getGradientBorder: uiModule.getGradientBorder,
-            cardBase: uiModule.cardBase,
-            getGlowStyle: uiModule.getGlowStyle,
-            pulseAnimation: uiModule.pulseAnimation,
-          });
-
-          setParticles(uiModule.generateParticles(25));
+          if (mods['../../../utils/uiEngine.js']) {
+            try {
+              const m = await mods['../../../utils/uiEngine.js']();
+              if (m.getGradientBorder) {
+                setUI({
+                  getGradientBorder: m.getGradientBorder,
+                  cardBase: m.cardBase,
+                  getGlowStyle: m.getGlowStyle,
+                  pulseAnimation: m.pulseAnimation,
+                  modalMotionProps: m.modalMotionProps || {},
+                  historyBarProps: m.historyBarProps || (() => ({}))
+                });
+                if (m.generateParticles) setParticles(m.generateParticles(25));
+              }
+            } catch(e){}
+          }
+          if (mods['../../../utils/croeX.js']) {
+             try { const m = await mods['../../../utils/croeX.js'](); if (m.getCropEmoji) setGetEmoji(() => m.getCropEmoji); } catch(e){}
+          }
         }
       } catch (err) {
         console.error(err);
@@ -113,13 +128,14 @@ export default function HistoryViewModal({ data, onClose }) {
         <motion.div
           {...(isPremium ? ui.pulseAnimation : {})}
           style={isPremium ? ui.getGlowStyle(glow) : {}}
-          className={`${ui.cardBase} overflow-y-auto`}
+          className={`${ui.cardBase} max-h-[85vh] flex flex-col`}
         >
+          <div className="overflow-y-auto pr-2 custom-scrollbar">
           {/* HEADER */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
               <span className="text-2xl sm:text-3xl">
-                {getCropEmoji(data.predicted_crop)}
+                {isPremium ? getEmoji(data.predicted_crop) : "🌱"}
               </span>
               {data.predicted_crop}
             </h2>
@@ -146,10 +162,13 @@ export default function HistoryViewModal({ data, onClose }) {
           ) : (
             <>
               {details.image_url && (
-                <img
-                  src={details.image_url}
-                  className="w-full h-36 sm:h-40 object-cover rounded-xl mb-4"
-                />
+                <div className="w-full h-48 sm:h-56 md:h-64 rounded-2xl overflow-hidden shadow-lg mb-4 bg-white/5">
+                  <img
+                    src={details.image_url}
+                    className="w-full h-full object-contain bg-black/20"
+                    alt={data.predicted_crop}
+                  />
+                </div>
               )}
 
               <div className="space-y-2 text-sm text-gray-200">
@@ -172,10 +191,12 @@ export default function HistoryViewModal({ data, onClose }) {
             <pre>{JSON.stringify(data.input_data, null, 2)}</pre>
           </div>
 
+          </div>
+
           {/* CLOSE */}
           <button
             onClick={onClose}
-            className="mt-5 w-full py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+            className="mt-6 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all border border-white/5 active:scale-[0.98] shrink-0"
           >
             Close
           </button>
