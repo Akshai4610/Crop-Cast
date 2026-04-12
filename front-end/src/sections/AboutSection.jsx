@@ -4,6 +4,7 @@ import { Element } from "react-scroll";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Leaf, BarChart2, Globe, ShieldCheck } from "lucide-react";
+import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -71,6 +72,53 @@ function StatItem({ target, suffix, label }) {
         {label}
       </p>
     </div>
+  );
+}
+
+function PillarCard({ icon, title, desc }) {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  return (
+    <motion.div
+      className="about-pillar relative group rounded-2xl p-5 cursor-default overflow-hidden"
+      style={{
+        background: "rgba(255,255,255,0.025)",
+        border: "1px solid rgba(255,255,255,0.06)",
+      }}
+      onMouseMove={handleMouseMove}
+      whileHover={{ y: -4, backdropFilter: "blur(12px)" }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+    >
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition duration-300 group-hover:opacity-100"
+        style={{
+          background: useMotionTemplate`
+            radial-gradient(
+              350px circle at ${mouseX}px ${mouseY}px,
+              rgba(52, 211, 153, 0.15),
+              transparent 80%
+            )
+          `,
+        }}
+      />
+      <div className="relative z-10">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110"
+          style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}
+        >
+          {icon}
+        </div>
+        <h3 className="text-sm font-bold text-white mb-1.5">{title}</h3>
+        <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{desc}</p>
+      </div>
+    </motion.div>
   );
 }
 
@@ -229,26 +277,8 @@ const AboutSection = () => {
 
           {/* ── PILLARS ── */}
           <div className="about-pillars grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {PILLARS.map(({ icon, title, desc }) => (
-              <div
-                key={title}
-                className="about-pillar group rounded-2xl p-5 transition-all duration-300 hover:border-emerald-500/30 cursor-default"
-                style={{
-                  background: "rgba(255,255,255,0.025)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(52,211,153,0.06)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.025)"; }}
-              >
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
-                  style={{ background: "rgba(52,211,153,0.1)", color: "#34d399" }}
-                >
-                  {icon}
-                </div>
-                <h3 className="text-sm font-bold text-white mb-1.5">{title}</h3>
-                <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{desc}</p>
-              </div>
+            {PILLARS.map((p) => (
+              <PillarCard key={p.title} {...p} />
             ))}
           </div>
 

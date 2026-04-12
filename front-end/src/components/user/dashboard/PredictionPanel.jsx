@@ -1,5 +1,5 @@
 // PredictionPanel.jsx — Premium redesign, ALL logic unchanged
-import { useEffect, useState, useRef, Suspense } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Zap, TrendingUp, Leaf, Lock, Box, Sparkles } from "lucide-react";
 
@@ -18,7 +18,7 @@ function cropColor(name = "") {
   return map[key] || map.default;
 }
 
-const PredictionPanel = ({ crops, confidence, top3, loading, inputData }) => {
+const PredictionPanel = React.memo(({ crops, confidence, top3, loading, inputData }) => {
   /* ── Logic unchanged ── */
   const panelRef = useRef(null);
   const [isPremium, setIsPremium] = useState(false);
@@ -123,6 +123,7 @@ const PredictionPanel = ({ crops, confidence, top3, loading, inputData }) => {
   return (
     <motion.div
       ref={panelRef}
+      layout={isPremium ? "position" : false}
       {...(isPremium ? utils.panelMotionProps : {})}
       className={`relative rounded-2xl overflow-hidden ${isPremium ? '' : 'bg-slate-900 border border-slate-800'}`}
       style={isPremium ? {
@@ -289,6 +290,6 @@ const PredictionPanel = ({ crops, confidence, top3, loading, inputData }) => {
       )}
     </motion.div>
   );
-};
+});
 
 export default PredictionPanel;

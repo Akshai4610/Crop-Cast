@@ -19,19 +19,20 @@ def get_all_crops():
 @router.get("/{crop_name}")
 def get_crop_details(crop_name: str):
     try:
-        formatted = crop_name.strip().lower().replace(" ", "")
+        formatted_name = crop_name.strip()
+        
+        # ✅ FIX: Efficient MongoDB $regex match instead of O(N) Python iteration
+        # Searches both crop_name and name fields flexibly
+        crop = crop_collection.find_one({
+            "$or": [
+                {"crop_name": {"$regex": formatted_name, "$options": "i"}},
+                {"name": {"$regex": formatted_name, "$options": "i"}}
+            ]
+        }, {"_id": 0})
 
-        crops = list(crop_collection.find({}, {"_id": 0}))
-
-        for crop in crops:
-            db_name = (
-                crop.get("crop_name", "") or crop.get("name", "")
-            ).strip().lower().replace(" ", "")
-
-            # ✅ FIX: flexible matching
-            if formatted in db_name or db_name in formatted:
-                print(f"✅ Crop FOUND → {crop_name}")
-                return {"exists": True, "data": crop}
+        if crop:
+            print(f"✅ Crop FOUND → {crop_name}")
+            return {"exists": True, "data": crop}
 
         print(f"❌ Crop NOT FOUND → {crop_name}")
         return {"exists": False}

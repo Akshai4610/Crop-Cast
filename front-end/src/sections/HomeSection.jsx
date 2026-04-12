@@ -4,6 +4,67 @@ import { Element } from "react-scroll";
 import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Leaf, Zap, Cloud } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+
+// ─────────────────────────────────────────────
+// HIGHEST END UI: 3D Tilt Card Component
+// ─────────────────────────────────────────────
+const TiltCard = ({ children, className, delayStr }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 20 });
+  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 20 });
+
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["15deg", "-15deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-15deg", "15deg"]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      className={className}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
+      whileHover={{ scale: 1.05, zIndex: 50 }}
+    >
+      {/* Glossy overlay effect */}
+      <motion.div
+        className="absolute inset-0 rounded-2xl pointer-events-none"
+        style={{
+          background: useTransform(
+            () => `radial-gradient(circle at ${x.get() * 100 + 50}% ${y.get() * 100 + 50}%, rgba(255,255,255,0.1) 0%, transparent 60%)`
+          )
+        }}
+      />
+      {/* Inner container pops out in 3D */}
+      <div style={{ transform: "translateZ(30px)" }} className="flex items-center gap-3 w-full">
+        {children}
+      </div>
+    </motion.div>
+  );
+};
+
 
 const HomeSection = () => {
   const sectionRef = useRef(null);
@@ -84,60 +145,60 @@ const HomeSection = () => {
           style={{ background: "radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 65%)", filter: "blur(60px)" }}
         />
 
-        {/* ── FLOATING STAT CARDS ── */}
-        <div
-          className="float-card-1 hidden lg:flex absolute top-36 right-[6%] items-center gap-3 px-4 py-3 rounded-2xl"
+        {/* ── FLOATING STAT CARDS (Now with 3D tilts) ── */}
+        <TiltCard
+          className="float-card-1 hidden lg:flex absolute top-36 right-[6%] items-center px-4 py-3 rounded-2xl cursor-pointer"
           style={{
-            background: "rgba(10,20,15,0.8)",
-            backdropFilter: "blur(20px)",
+            background: "rgba(10,20,15,0.6)",
+            backdropFilter: "blur(24px)",
             border: "1px solid rgba(52,211,153,0.15)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
           }}
         >
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(52,211,153,0.12)" }}>
             <Cloud size={16} style={{ color: "#34d399" }} />
           </div>
           <div>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Live Weather</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-widest">Live Weather</p>
             <p className="text-sm font-bold text-white">28°C · Clear</p>
           </div>
-        </div>
+        </TiltCard>
 
-        <div
-          className="float-card-2 hidden lg:flex absolute bottom-48 left-[5%] items-center gap-3 px-4 py-3 rounded-2xl"
+        <TiltCard
+          className="float-card-2 hidden lg:flex absolute bottom-48 left-[5%] items-center px-4 py-3 rounded-2xl cursor-pointer"
           style={{
-            background: "rgba(10,20,15,0.8)",
-            backdropFilter: "blur(20px)",
+            background: "rgba(10,20,15,0.6)",
+            backdropFilter: "blur(24px)",
             border: "1px solid rgba(52,211,153,0.15)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
           }}
         >
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(52,211,153,0.12)" }}>
             <Zap size={16} style={{ color: "#34d399" }} />
           </div>
           <div>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Accuracy</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-widest">Accuracy</p>
             <p className="text-sm font-bold text-white">94.2% · AI Model</p>
           </div>
-        </div>
+        </TiltCard>
 
-        <div
-          className="float-card-3 hidden lg:flex absolute top-48 left-[6%] items-center gap-3 px-4 py-3 rounded-2xl"
+        <TiltCard
+          className="float-card-3 hidden lg:flex absolute top-48 left-[6%] items-center px-4 py-3 rounded-2xl cursor-pointer"
           style={{
-            background: "rgba(10,20,15,0.8)",
-            backdropFilter: "blur(20px)",
+            background: "rgba(10,20,15,0.6)",
+            backdropFilter: "blur(24px)",
             border: "1px solid rgba(52,211,153,0.15)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
           }}
         >
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(52,211,153,0.12)" }}>
             <Leaf size={16} style={{ color: "#34d399" }} />
           </div>
           <div>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Crops Tracked</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-widest">Crops Tracked</p>
             <p className="text-sm font-bold text-white">22 Varieties</p>
           </div>
-        </div>
+        </TiltCard>
 
         {/* ── HERO CONTENT ── */}
         <div className="relative z-10 max-w-4xl w-full text-center">
@@ -190,25 +251,33 @@ const HomeSection = () => {
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
-            <button
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/signup")}
-              className="hero-cta flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-black transition-all duration-200 hover:opacity-90 active:scale-[0.97]"
+              className="hero-cta flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-bold text-black"
               style={{
                 background: "linear-gradient(135deg, #059669, #34d399)",
-                boxShadow: "0 8px 28px rgba(52,211,153,0.35)",
+                boxShadow: "0 12px 32px rgba(52,211,153,0.4), inset 0 2px 0 rgba(255,255,255,0.2)",
               }}
             >
               Start Free
               <ArrowRight size={16} />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2, backgroundColor: "rgba(255,255,255,0.1)" }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/login")}
-              className="hero-cta flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:bg-white/5"
-              style={{ color: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.1)" }}
+              className="hero-cta flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-semibold"
+              style={{ 
+                color: "rgba(255,255,255,0.85)", 
+                border: "1px solid rgba(255,255,255,0.2)",
+                backdropFilter: "blur(12px)"
+              }}
             >
               Sign In
-            </button>
+            </motion.button>
           </div>
 
           {/* Stats row */}

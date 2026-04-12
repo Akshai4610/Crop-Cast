@@ -10,8 +10,7 @@ Responsibilities:
 
 from typing import List
 
-from fastapi import Query
-from fastapi import APIRouter
+from fastapi import Query, APIRouter, BackgroundTasks
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 
@@ -44,15 +43,31 @@ class PredictionRequest(BaseModel):
 
 
 # ======================================================
+# 🔹 HELPER: Background Save
+# ======================================================
+def save_prediction_background(email: str, input_data: dict, result: dict):
+    try:
+        predictions_collection.insert_one({
+            "email": email,
+            "input_data": input_data,
+            "predicted_crop": result["predicted_crop"],
+            "confidence": result["confidence"],
+            "top_3": result["top_3"],
+            "timestamp": datetime.now(timezone.utc)
+        })
+    except Exception as e:
+        print(f"Error saving prediction to DB: {e}")
+
+# ======================================================
 # 🔹 Predict + Save
 # ======================================================
 @router.post("")
-def predict_and_save(pred: PredictionRequest):
+def predict_and_save(pred: PredictionRequest, background_tasks: BackgroundTasks):
     """
     Steps:
     1. Call ML model
-    2. Save result in MongoDB
-    3. Return result
+    2. Save result in MongoDB (Background)
+    3. Return result instantly
     """
 
     # Convert request → dict for ML model
@@ -68,21 +83,9 @@ def predict_and_save(pred: PredictionRequest):
 
     # Run ML prediction
     result = predict_crop(input_data)
-    # result = {
-    #   predicted_crop,
-    #   confidence,
-    #   top_3
-    # }
-
-    # Save to DB
-    predictions_collection.insert_one({
-        "email": pred.email,
-        "input_data": input_data,
-        "predicted_crop": result["predicted_crop"],
-        "confidence": result["confidence"],
-        "top_3": result["top_3"],
-        "timestamp": datetime.now(timezone.utc)
-    })
+    
+    # Save to DB in background thread to reduce latency
+    background_tasks.add_task(save_prediction_background, pred.email, input_data, result)
 
     return result
 

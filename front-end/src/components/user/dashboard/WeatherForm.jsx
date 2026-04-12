@@ -1,8 +1,8 @@
 // WeatherForm.jsx — Premium redesign, ALL logic unchanged
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { gsap } from "gsap";
 import { FlaskConical, Thermometer, Droplets, CloudRain, Sprout, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ── field metadata ── */
 const FIELDS = [
@@ -15,7 +15,7 @@ const FIELDS = [
   { name: "rainfall",    label: "Rainfall",         icon: <CloudRain size={14} />,     unit: "mm",    accent: "#818cf8", hint: "0–3000" },
 ];
 
-const WeatherForm = ({ onPredict, loading }) => {
+const WeatherForm = memo(({ onPredict, loading }) => {
   /* ── State — logic unchanged ── */
   const [formData, setFormData] = useState({
     N: "", P: "", K: "", temperature: "", humidity: "", ph: "", rainfall: "",
@@ -149,7 +149,7 @@ const WeatherForm = ({ onPredict, loading }) => {
       </div>
     </form>
   );
-};
+});
 
 /* ── Premium input field ── */
 function PremiumField({ name, label, icon, unit, accent, hint, value, onChange }) {
@@ -158,8 +158,10 @@ function PremiumField({ name, label, icon, unit, accent, hint, value, onChange }
 
   return (
     <div className="wf-field group relative">
-      <div
-        className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-all duration-200"
+      <motion.div
+        animate={{ scale: focused ? 1.02 : 1 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-colors duration-200"
         style={{
           background: focused
             ? `${accent}09`
@@ -223,7 +225,7 @@ function PremiumField({ name, label, icon, unit, accent, hint, value, onChange }
         >
           {unit}
         </span>
-      </div>
+      </motion.div>
     </div>
   );
 }
